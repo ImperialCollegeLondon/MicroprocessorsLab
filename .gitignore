@@ -21,4 +21,3 @@ funclist
 nbproject/Makefile-*
 disassembly/
 *.map
-Makefile-local-default.mk
