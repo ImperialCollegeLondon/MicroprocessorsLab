@@ -15,13 +15,14 @@
       <itemPath>Simple1.asm</itemPath>
       <itemPath>config.asm</itemPath>
       <itemPath>UART.asm</itemPath>
+      <itemPath>LCD.asm</itemPath>
+      <itemPath>ADC.asm</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
                    projectFiles="false">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
-    <itemPath>LCD.asm</itemPath>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
