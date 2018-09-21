@@ -1,6 +1,6 @@
 #include p18f87k22.inc
 
-    global  LCD_Setup, LCD_Write_Message
+    global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex
 
 acs0    udata_acs   ; named variables in access ram
 LCD_cnt_l   res 1   ; reserve 1 byte for variable LCD_cnt_l
@@ -8,6 +8,9 @@ LCD_cnt_h   res 1   ; reserve 1 byte for variable LCD_cnt_h
 LCD_cnt_ms  res 1   ; reserve 1 byte for ms counter
 LCD_tmp	    res 1   ; reserve 1 byte for temporary use
 LCD_counter res 1   ; reserve 1 byte for counting through nessage
+
+acs_ovr	access_ovr
+LCD_hex_tmp res 1   ; reserve 1 byte for variable LCD_hex_tmp	
 
 	constant    LCD_E=5	; LCD enable bit
     	constant    LCD_RS=4	; LCD register select bit
@@ -46,6 +49,22 @@ LCD_Setup
 	call	LCD_delay_x4us
 	return
 
+LCD_Write_Hex	    ; Writes byte stored in W as hex
+	movwf	LCD_hex_tmp
+	swapf	LCD_hex_tmp,W	; high nibble first
+	call	LCD_Hex_Nib
+	movf	LCD_hex_tmp,W	; then low nibble
+LCD_Hex_Nib	    ; writes low nibble as hex character
+	andlw	0x0F
+	movwf	LCD_tmp
+	movlw	0x0A
+	cpfslt	LCD_tmp
+	addlw	0x07	; number is greater than 9 
+	addlw	0x26
+	addwf	LCD_tmp,W
+	call	LCD_Send_Byte_D ; write out ascii
+	return
+	
 LCD_Write_Message	    ; Message stored at FSR2, length stored in W
 	movwf   LCD_counter
 LCD_Loop_message
