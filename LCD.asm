@@ -82,7 +82,6 @@ LCD_Send_Byte_I		    ; Transmits byte stored in W to instruction reg
 	bcf	LATB, LCD_RS	; Instruction write clear RS bit
 	call    LCD_Enable  ; Pulse enable Bit 
 	movf	LCD_tmp,W   ; swap nibbles, now do low nibble
-LCD_Send_Nib
 	andlw   0x0f	    ; select just low nibble
 	movwf   LATB	    ; output data bits to LCD
 	bcf	LATB, LCD_RS    ; Instruction write clear RS bit
