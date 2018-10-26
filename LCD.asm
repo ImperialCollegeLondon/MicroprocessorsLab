@@ -20,8 +20,8 @@ LCD_Setup
 	movwf	TRISB
 	movlw   .40
 	call	LCD_delay_ms	; wait 40ms for LCD to start up properly
-	movlw	b'00000011'	; Function set 4-bit
-	call	LCD_Send_Nib
+	movlw	b'00110000'	; Function set 4-bit
+	call	LCD_Send_Byte_I
 	movlw	.10		; wait 40us
 	call	LCD_delay_x4us
 	movlw	b'00101000'	; 2 line display 5x8 dot characters
@@ -63,7 +63,6 @@ LCD_Send_Byte_I		    ; Transmits byte stored in W to instruction reg
 	bcf	LATB, LCD_RS	; Instruction write clear RS bit
 	call    LCD_Enable  ; Pulse enable Bit 
 	movf	LCD_tmp,W   ; swap nibbles, now do low nibble
-LCD_Send_Nib
 	andlw   0x0f	    ; select just low nibble
 	movwf   LATB	    ; output data bits to LCD
 	bcf	LATB, LCD_RS    ; Instruction write clear RS bit
