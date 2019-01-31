@@ -14,6 +14,7 @@
                    projectFiles="true">
       <itemPath>Simple1.asm</itemPath>
       <itemPath>config.asm</itemPath>
+      <itemPath>DAC_Interrupt.asm</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
