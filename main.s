@@ -1,6 +1,8 @@
 	#include <pic18_chip_select.inc>
+	#include <xc.inc>
 
 PSECT code
+main:
 	org 0x0
 	goto	start
 
@@ -20,4 +22,4 @@ test:
 	bra 	loop		    ; Not yet finished goto start of loop again
 	goto 	0x0		    ; Re-run program from start
 
-	end
+	end main
