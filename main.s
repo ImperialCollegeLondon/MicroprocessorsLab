@@ -1,13 +1,13 @@
 	#include <pic18_chip_select.inc>
 	#include <xc.inc>
 
-PSECT code
+psect	code, abs
+	
 main:
-	org 0x0
+	org	0x0
 	goto	start
 
-	org 0x100		    ; Main code starts here at address 0x100
-
+	org	0x100		    ; Main code starts here at address 0x100
 start:
 	movlw 	0x0
 	movwf	TRISB, A	    ; Port C all outputs
@@ -22,4 +22,4 @@ test:
 	bra 	loop		    ; Not yet finished goto start of loop again
 	goto 	0x0		    ; Re-run program from start
 
-	end main
+	end	main
