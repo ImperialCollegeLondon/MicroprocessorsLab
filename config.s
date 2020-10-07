@@ -2,7 +2,7 @@
 
 ; Assembly source line config statements
 
-#include "p18f87k22.inc"
+	#include <pic18_chip_select.inc>
 
 ; CONFIG1L
   CONFIG  RETEN = ON            ; VREG Sleep Enable bit (Enabled)
@@ -36,7 +36,7 @@
 ; CONFIG3H
   CONFIG  CCP2MX = PORTC        ; CCP2 Mux (RC1)
   CONFIG  ECCPMX = PORTE        ; ECCP Mux (Enhanced CCP1/3 [P1B/P1C/P3B/P3C] muxed with RE6/RE5/RE4/RE3)
-  CONFIG  MSSPMSK = MSK7        ; MSSP address masking (7 Bit address masking mode)
+  CONFIG  MSSPMSK = 1           ; MSSP address masking (7 Bit address masking mode)
   CONFIG  MCLRE = ON            ; Master Clear Enable (MCLR Enabled, RG5 Disabled)
 
 ; CONFIG4L
