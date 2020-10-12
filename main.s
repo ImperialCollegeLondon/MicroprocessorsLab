@@ -15,7 +15,8 @@ setup:
 	goto	start
 	; ******* My data and where to put it in RAM *
 myTable:
-	db	'T','h','i','s',' ','i','s',' ','j','u','s','t',' ','s','o','m','e',' ','d','a','t','a'
+	db	'T','h','i','s',' ','i','s',' ','j','u','s','t'
+	db	' ','s','o','m','e',' ','d','a','t','a'
 	myArray EQU 0x400	; Address in RAM for data
 	counter EQU 0x10	; Address of counter variable
 	; ******* Main programme *********************
