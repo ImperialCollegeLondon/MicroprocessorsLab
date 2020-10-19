@@ -23,7 +23,7 @@
   CONFIG  BORPWR = ZPBORMV      ; BORMV Power level (ZPBORMV instead of BORMV is selected)
 
 ; CONFIG2H
-  CONFIG  WDTEN = SWDTDIS       ; Watchdog Timer (WDT enabled in hardware; SWDTEN bit disabled)
+  CONFIG  WDTEN = OFF		; Watchdog Timer (WDT disabled in hardware and software)
   CONFIG  WDTPS = 1048576       ; Watchdog Postscaler (1:1048576)
 
 ; CONFIG3L
