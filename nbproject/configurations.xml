@@ -12,15 +12,16 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>Simple1.asm</itemPath>
-      <itemPath>config.asm</itemPath>
-      <itemPath>UART.asm</itemPath>
+      <itemPath>config.s</itemPath>
+      <itemPath>main.s</itemPath>
+      <itemPath>UART.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
                    projectFiles="false">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
+    <itemPath>README.md</itemPath>
     <itemPath>README.md</itemPath>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
@@ -31,14 +32,16 @@
         <targetDevice>PIC18F87K22</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>ICD3PlatformTool</platformTool>
-        <languageToolchain>MPASMWIN</languageToolchain>
-        <languageToolchainVersion>5.81</languageToolchainVersion>
-        <platform>3</platform>
+        <platformTool>Simulator</platformTool>
+        <languageToolchain>pic-as</languageToolchain>
+        <languageToolchainVersion>2.30</languageToolchainVersion>
+        <platform>4</platform>
       </toolsSet>
       <packs>
-        <pack name="PIC18F-K_DFP" vendor="Microchip" version="1.0.40"/>
+        <pack name="PIC18F-K_DFP" vendor="Microchip" version="1.4.87"/>
       </packs>
+      <ScriptingSettings>
+      </ScriptingSettings>
       <compileType>
         <linkerTool>
           <linkerLibItems>
@@ -102,25 +105,10 @@
         <property key="programoptions.uselvpprogramming" value="false"/>
         <property key="voltagevalue" value="3.25"/>
       </ICD3PlatformTool>
-      <MPASMWIN-AS>
-        <property key="cross.reference.file" value=""/>
-        <property key="default.radix" value="HEX"/>
-        <property key="enable.case.sensitivity" value="true"/>
-        <property key="hex.output.format" value="INHX32"/>
-        <property key="preprocessor.macros" value=""/>
-        <property key="warning.level" value="0"/>
-      </MPASMWIN-AS>
-      <MPASMWIN-LD>
-        <property key="cod-file" value="false"/>
-        <property key="extra-lib-directories" value=""/>
-        <property key="hex-output-format" value="INHX32"/>
-        <property key="map-file" value="${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.map"/>
-      </MPASMWIN-LD>
       <Simulator>
         <property key="codecoverage.enabled" value="Disable"/>
         <property key="codecoverage.enableoutputtofile" value="false"/>
         <property key="codecoverage.outputfile" value=""/>
-        <property key="codecoverage.report" value=""/>
         <property key="oscillator.auxfrequency" value="120"/>
         <property key="oscillator.auxfrequencyunit" value="Mega"/>
         <property key="oscillator.frequency" value="1"/>
@@ -128,7 +116,7 @@
         <property key="oscillator.rcfrequency" value="250"/>
         <property key="oscillator.rcfrequencyunit" value="Kilo"/>
         <property key="periphADC1.altscl" value="false"/>
-        <property key="periphADC1.minTacq" value=""/>
+        <property key="periphADC1.minTacq" value="5"/>
         <property key="periphADC1.tacqunits" value="microseconds"/>
         <property key="periphADC2.altscl" value="false"/>
         <property key="periphADC2.minTacq" value=""/>
@@ -141,12 +129,13 @@
         <property key="periphComp6.gte" value="gt"/>
         <property key="reset.scl" value="false"/>
         <property key="reset.type" value="MCLR"/>
+        <property key="toolpack.updateoptions"
+                  value="toolpack.updateoptions.uselatestoolpack"/>
+        <property key="toolpack.updateoptions.packversion"
+                  value="Press to select which tool pack to use"/>
         <property key="uart0io.output" value="window"/>
         <property key="uart0io.outputfile" value=""/>
         <property key="uart0io.uartioenabled" value="false"/>
-        <property key="uart10io.output" value="window"/>
-        <property key="uart10io.outputfile" value=""/>
-        <property key="uart10io.uartioenabled" value="false"/>
         <property key="uart1io.output" value="window"/>
         <property key="uart1io.outputfile" value=""/>
         <property key="uart1io.uartioenabled" value="false"/>
@@ -165,15 +154,48 @@
         <property key="uart6io.output" value="window"/>
         <property key="uart6io.outputfile" value=""/>
         <property key="uart6io.uartioenabled" value="false"/>
-        <property key="uart7io.output" value="window"/>
-        <property key="uart7io.outputfile" value=""/>
-        <property key="uart7io.uartioenabled" value="false"/>
-        <property key="uart8io.output" value="window"/>
-        <property key="uart8io.outputfile" value=""/>
-        <property key="uart8io.uartioenabled" value="false"/>
-        <property key="uart9io.output" value="window"/>
-        <property key="uart9io.outputfile" value=""/>
-        <property key="uart9io.uartioenabled" value="false"/>
+        <property key="usart0io.output" value="window"/>
+        <property key="usart0io.outputfile" value=""/>
+        <property key="usart0io.uartioenabled" value="false"/>
+        <property key="usart1io.output" value="window"/>
+        <property key="usart1io.outputfile" value=""/>
+        <property key="usart1io.uartioenabled" value="false"/>
+        <property key="usart2io.output" value="window"/>
+        <property key="usart2io.outputfile" value=""/>
+        <property key="usart2io.uartioenabled" value="false"/>
+        <property key="usart3io.output" value="window"/>
+        <property key="usart3io.outputfile" value=""/>
+        <property key="usart3io.uartioenabled" value="false"/>
+        <property key="usart4io.output" value="window"/>
+        <property key="usart4io.outputfile" value=""/>
+        <property key="usart4io.uartioenabled" value="false"/>
+        <property key="usartc0io.output" value="window"/>
+        <property key="usartc0io.outputfile" value=""/>
+        <property key="usartc0io.uartioenabled" value="false"/>
+        <property key="usartc1io.output" value="window"/>
+        <property key="usartc1io.outputfile" value=""/>
+        <property key="usartc1io.uartioenabled" value="false"/>
+        <property key="usartd0io.output" value="window"/>
+        <property key="usartd0io.outputfile" value=""/>
+        <property key="usartd0io.uartioenabled" value="false"/>
+        <property key="usartd1io.output" value="window"/>
+        <property key="usartd1io.outputfile" value=""/>
+        <property key="usartd1io.uartioenabled" value="false"/>
+        <property key="usarte0io.output" value="window"/>
+        <property key="usarte0io.outputfile" value=""/>
+        <property key="usarte0io.uartioenabled" value="false"/>
+        <property key="usarte1io.output" value="window"/>
+        <property key="usarte1io.outputfile" value=""/>
+        <property key="usarte1io.uartioenabled" value="false"/>
+        <property key="usarte2io.output" value="window"/>
+        <property key="usarte2io.outputfile" value=""/>
+        <property key="usarte2io.uartioenabled" value="false"/>
+        <property key="usartf0io.output" value="window"/>
+        <property key="usartf0io.outputfile" value=""/>
+        <property key="usartf0io.uartioenabled" value="false"/>
+        <property key="usartf1io.output" value="window"/>
+        <property key="usartf1io.outputfile" value=""/>
+        <property key="usartf1io.uartioenabled" value="false"/>
         <property key="warningmessagebreakoptions.W0001_CORE_BITREV_MODULO_EN"
                   value="report"/>
         <property key="warningmessagebreakoptions.W0002_CORE_SECURE_MEMORYACCESS"
@@ -238,6 +260,8 @@
                   value="report"/>
         <property key="warningmessagebreakoptions.W0034_CORE_UNALIGNED_MEMORY_ACCESS"
                   value="report"/>
+        <property key="warningmessagebreakoptions.W0035_CORE_UNIMPLEMENTED_RAMACCESS_NOTRAP"
+                  value="report"/>
         <property key="warningmessagebreakoptions.W0040_FPU_DIFF_CP10_CP11"
                   value="report"/>
         <property key="warningmessagebreakoptions.W0041_FPU_ACCESS_DENIED"
@@ -286,6 +310,10 @@
         <property key="warningmessagebreakoptions.W0116_SIM_STACK_OVERFLOW"
                   value="report"/>
         <property key="warningmessagebreakoptions.W0117_SIM_STACK_UNDERFLOW"
+                  value="report"/>
+        <property key="warningmessagebreakoptions.W0118_SIM_INVALID_FIELD_VALUE"
+                  value="report"/>
+        <property key="warningmessagebreakoptions.W0119_SIM_SAMPLING_RATE_VIOLATION"
                   value="report"/>
         <property key="warningmessagebreakoptions.W0201_ADC_NO_STIMULUS_FILE"
                   value="report"/>
@@ -370,6 +398,12 @@
         <property key="warningmessagebreakoptions.W0243_ADC_INVALID_TAD" value="report"/>
         <property key="warningmessagebreakoptions.W0244_ADC_CONVERSION_ABORTED"
                   value="report"/>
+        <property key="warningmessagebreakoptions.W0245_ADC_BUFREGEN_NOT_ALLOWED"
+                  value="report"/>
+        <property key="warningmessagebreakoptions.W0246_ADC_ACCUMULATION_BAD_RESSEL"
+                  value="report"/>
+        <property key="warningmessagebreakoptions.W0247_ADC_CONVERSION_BAD_RESSEL"
+                  value="report"/>
         <property key="warningmessagebreakoptions.W0400_PWM_PWM_FASTER_THAN_FOSC"
                   value="report"/>
         <property key="warningmessagebreakoptions.W0600_WDT_2ND_WDT_MR_WRITE"
@@ -383,6 +417,20 @@
                   value="report"/>
         <property key="warningmessagebreakoptions.W0702_CLC_CIRCULAR_LOOP"
                   value="report"/>
+        <property key="warningmessagebreakoptions.W0800_ACC_INPUT_INVALID_CONFIG"
+                  value="report"/>
+        <property key="warningmessagebreakoptions.W0801_ACC_INPUT_NOT_SUPPORTED"
+                  value="report"/>
+        <property key="warningmessagebreakoptions.W0802_ACC_INVERTED_WINDOW_LIMITS"
+                  value="report"/>
+        <property key="warningmessagebreakoptions.W0803_ACC_MISMATCHED_POS_INPUTS"
+                  value="report"/>
+        <property key="warningmessagebreakoptions.W0804_ACC_WINDOW_COMP_DISABLED"
+                  value="report"/>
+        <property key="warningmessagebreakoptions.W0805_ACC_WINDOW_COMPS_MODES"
+                  value="report"/>
+        <property key="warningmessagebreakoptions.W0806_ACC_FEATURE_NOT_SUPPORTED"
+                  value="report"/>
         <property key="warningmessagebreakoptions.W10001_RESERVED_IRQ_HANDLER_INVOKED"
                   value="report"/>
         <property key="warningmessagebreakoptions.W10002_UNSUPPORTED_CLK_SOURCE"
@@ -394,6 +442,8 @@
         <property key="warningmessagebreakoptions.W10103_UNSUPPORTED_RECEIVER_FILTER"
                   value="report"/>
         <property key="warningmessagebreakoptions.W10301_NO_PORT_PINS_FOUND"
+                  value="report"/>
+        <property key="warningmessagebreakoptions.W10500_UNSUPPORTED_SOURCE"
                   value="report"/>
         <property key="warningmessagebreakoptions.W1201_DATAFLASH_MEM_OUTSIDE_RANGE"
                   value="report"/>
@@ -454,6 +504,8 @@
                   value="report"/>
         <property key="warningmessagebreakoptions.W8001_OSC_INVALID_CLOCK_SOURCE"
                   value="report"/>
+        <property key="warningmessagebreakoptions.W8002_OSC_RESERVED_FEXTOSC"
+                  value="report"/>
         <property key="warningmessagebreakoptions.W9001_TMR_GATE_AND_EXTCLOCK_ENABLED"
                   value="report"/>
         <property key="warningmessagebreakoptions.W9002_TMR_NO_PIN_AVAILABLE"
@@ -511,13 +563,48 @@
                   value=""/>
         <property key="warningmessagebreakoptions.warningmessages" value="holdstate"/>
       </Simulator>
-      <mpasmsuite>
-        <property key="absolute-mode" value="false"/>
-        <property key="eeprom-width" value="8"/>
-        <property key="extended-mode" value="false"/>
-        <property key="extended-mode-mpasm" value="false"/>
-        <property key="extended-mode-mplink" value="false"/>
-      </mpasmsuite>
+      <pic-as-assembler>
+        <property key="fmax-errors" value="20"/>
+        <property key="list-custom-assembler-options" value=""/>
+        <property key="list-custom-preprocessor-options" value=""/>
+        <property key="list-ddefine-symbols" value=""/>
+        <property key="list-define-symbols" value=""/>
+        <property key="list-include-directories" value=""/>
+        <property key="suppress-warnings" value="false"/>
+        <property key="verbose" value="false"/>
+        <property key="warning-level" value="0"/>
+        <property key="xassembler-with-cpp" value="true"/>
+        <appendMe value="-Wa,-a"/>
+      </pic-as-assembler>
+      <pic-as-global>
+        <property key="custom-dfp" value=""/>
+        <property key="instruction-set" value="std"/>
+        <property key="summary-class" value="false"/>
+        <property key="summary-file" value="false"/>
+        <property key="summary-hex" value="false"/>
+        <property key="summary-mem" value="true"/>
+        <property key="summary-psect" value="true"/>
+        <property key="summary-sha1" value="false"/>
+        <property key="summary-sha256" value="false"/>
+        <property key="summary-xml" value="false"/>
+        <property key="summary-xmlfull" value="false"/>
+      </pic-as-global>
+      <pic-as-linker>
+        <property key="linker-callgraph" value="full"/>
+        <property key="linker-checksum" value=""/>
+        <property key="linker-custom-options" value=""/>
+        <property key="linker-fill" value=""/>
+        <property key="linker-format-hex-file-for-download" value="false"/>
+        <property key="linker-libraries" value=""/>
+        <property key="linker-library-search-paths" value=""/>
+        <property key="linker-maxi-chip" value="false"/>
+        <property key="linker-produce-intel-hex-extended-address-zero-output"
+                  value="false"/>
+        <property key="linker-ram" value=""/>
+        <property key="linker-reserve" value=""/>
+        <property key="linker-rom" value=""/>
+        <property key="linker-serial" value=""/>
+      </pic-as-linker>
     </conf>
   </confs>
 </configurationDescriptor>
