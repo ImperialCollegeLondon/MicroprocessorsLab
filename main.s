@@ -19,6 +19,7 @@ myTable:
 	db	' ','s','o','m','e',' ','d','a','t','a'
 	myArray EQU 0x400	; Address in RAM for data
 	counter EQU 0x10	; Address of counter variable
+	align	2		; ensure alignment of subsequent instructions 
 	; ******* Main programme *********************
 start:	
 	lfsr	0, myArray	; Load FSR0 with address in RAM	
