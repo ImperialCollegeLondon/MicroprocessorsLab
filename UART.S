@@ -14,7 +14,8 @@ UART_Setup:
     bcf	    BRG16	; 8-bit generator only
     movlw   103		; gives 9600 Baud rate (actually 9615)
     movwf   SPBRG1, A	; set baud rate
-    bsf	    TRISC6	; TX1 pin is output on RC6 pin so must set TRISC6 to 1
+    bsf	    TRISC, PORTC_TX1_POSN, A	; TX1 pin is output on RC6 pin
+					; must set TRISC6 to 1
     return
 
 UART_Transmit_Message:	    ; Message stored at FSR2, length stored in W
