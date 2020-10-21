@@ -1,11 +1,11 @@
-#include <pic18_chip_select.inc>
+#include <xc.inc>
     
 global  UART_Setup, UART_Transmit_Message
 
 psect	udata_acs   ; reserve data space in access ram
 UART_counter: ds    1	    ; reserve 1 byte for variable UART_counter
 
-psect	code
+psect	uart_code,class=CODE
 UART_Setup:
     bsf	    SPEN	; enable
     bcf	    SYNC	; synchronous
@@ -31,7 +31,5 @@ UART_Transmit_Byte:	    ; Transmits byte stored in W
     bra	    UART_Transmit_Byte
     movwf   TXREG1, A
     return
-
-    end	    
 
 
