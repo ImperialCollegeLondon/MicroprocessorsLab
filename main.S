@@ -1,6 +1,7 @@
 #include <xc.inc>
 
 extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
+extrn	LCD_Setup, LCD_Write_Message
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -25,6 +26,7 @@ rst: 	org 0x0
 setup:	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
 	call	UART_Setup	; setup UART
+	call	LCD_Setup	; setup UART
 	goto	start
 	
 	; ******* Main programme ****************************************
@@ -45,6 +47,10 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	movlw	myTable_l	; output message to UART
 	lfsr	2, myArray
 	call	UART_Transmit_Message
+
+	movlw	myTable_l	; output message to LCD
+	lfsr	2, myArray
+	call	LCD_Write_Message
 
 	goto	$		; goto current line in code
 
