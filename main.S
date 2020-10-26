@@ -49,6 +49,7 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	call	UART_Transmit_Message
 
 	movlw	myTable_l	; output message to LCD
+	addlw	0xff		; don't send the final carriage return to LCD
 	lfsr	2, myArray
 	call	LCD_Write_Message
 

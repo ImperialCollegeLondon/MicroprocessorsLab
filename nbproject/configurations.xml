@@ -22,6 +22,7 @@
                    projectFiles="false">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
+    <itemPath>README.md</itemPath>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -34,7 +35,7 @@
         <platformTool>ICD3PlatformTool</platformTool>
         <languageToolchain>pic-as</languageToolchain>
         <languageToolchainVersion>2.30</languageToolchainVersion>
-        <platform>4</platform>
+        <platform>3</platform>
       </toolsSet>
       <packs>
         <pack name="PIC18F-K_DFP" vendor="Microchip" version="1.4.87"/>
