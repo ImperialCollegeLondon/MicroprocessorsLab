@@ -5,7 +5,7 @@ global  ADC_Setup, ADC_Read
 psect	adc_code, class=CODE
     
 ADC_Setup:
-	bsf	RA0	    ; use pin A0(==AN0) for input
+	bsf	TRISA, PORTA_RA0_POSN, A  ; use pin A0(==AN0) for input
 	bsf	ANSEL0	    ; set A0 to analog
 	movlw   0x01	    ; select AN0 for measurement
 	movwf   ADCON0, A   ; and turn ADC on
