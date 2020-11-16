@@ -14,13 +14,13 @@ myArray:    ds 0x80 ; reserve 128 bytes for message data
 psect	data    
 	; ******* myTable, data in programme memory, and its length *****
 myTable:
-    db   'j', 'j', 'l' , 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', '!'  
+    db   'h', 'e', 'l' , 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', '!'  
     myword EQU 0x200    ; Address in RAM for data
     counter_hi EQU 0x8     ; Address of counter variable
     cipherkey EQU 0x9   ; value of a cipher key 
     zorkey    EQU 0x10
     
-    
+   
 psect	code, abs	
 rst: 	org 0x0
  	goto	setup
@@ -30,21 +30,15 @@ setup:
 	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
 	call    keypad_setup
-	call    keypad_start
 	movff   LATH, cipherkey
+	call    keypad_setup
+	movff   LATH, zorkey
 	;.call	UART_Setup	; setup UART
 	call	LCD_Setup	; setup UART
 	goto	start
 	
 	; ******* Main programme ****************************************
 start: 	    
-	
-	
-	;movlw     7
-	;movwf     cipherkey
-	;ovff     LATH, cipherkey
-	movlw     206
-	movwf     zorkey
 	lfsr     0, myword    ; Load FSR0 with address in RAM
 	movlw    low highword(myTable)    ; address of data in PM
 	movwf    TBLPTRU, A    ; load upper bits to TBLPTRU
@@ -59,10 +53,10 @@ loop:
 	movf     cipherkey, W 
 	addwf    TABLAT, W		 ; add the cipher key to original letters
 	xorwf    zorkey, W		 ; add zorkey to cipher encrypt
-;	xorwf    zorkey, W		 ; decrypt string
-;	movwf   0x99			 ; decrypt string  
-;	movf    cipherkey,W		 ; decrypt string
-;	subwf    0x99, W
+	xorwf    zorkey, W		 ; decrypt string
+	movwf   0x99			 ; decrypt string  
+	movf    cipherkey,W		 ; decrypt string
+	subwf    0x99, W
 	movwf    POSTINC0		 ;  move read data from TABLAT to (FSR0), increment FSR0
 	decfsz    counter, A    ; count down to zero
 	bra    loop 
@@ -70,12 +64,12 @@ loop:
 	;movlw	myTable_l	; output message to UART
 	;lfsr	2, myArray
 	;all	UART_Transmit_Message
-	
+
 	movlw    12
 	lfsr     0  , 0x200
 	call	LCD_Write_Message   ; goto current line in code
-	;call    LCD_clear	    ;
 
+	goto     $
 			
 	; a delay subroutine if you need one, times around loop in delay_count
 delay:	decfsz	delay_count, A	; decrement until zero
