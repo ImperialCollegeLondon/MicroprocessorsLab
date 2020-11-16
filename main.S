@@ -1,8 +1,11 @@
 #include <xc.inc>
 
+extrn   encrypt_me, decrypt_me
 extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_clear
 extrn   keypad_setup, keypad_start
+extrn   Storage_setup, Storage_read
+
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -31,9 +34,14 @@ setup:
 	bsf	EEPGD 	; access Flash program memory
 	call    keypad_setup
 	movff   LATH, cipherkey
+	movlw   0 
+	movwf   LATH
 	call    keypad_setup
 	movff   LATH, zorkey
-	;.call	UART_Setup	; setup UART
+	movlw   0 
+	movwf   LATH
+	call    Storage_setup 
+	;call	UART_Setup 	; setup UART
 	call	LCD_Setup	; setup UART
 	goto	start
 	
@@ -49,21 +57,24 @@ start:
 	movlw    12
 	movwf    counter_hi, A		; our counter register
 loop: 	
-	tblrd*+			 ; move one byte from PM to TABLAT, increment TBLPRT
-	movf     cipherkey, W 
-	addwf    TABLAT, W		 ; add the cipher key to original letters
-	xorwf    zorkey, W		 ; add zorkey to cipher encrypt
-	xorwf    zorkey, W		 ; decrypt string
-	movwf   0x99			 ; decrypt string  
-	movf    cipherkey,W		 ; decrypt string
-	subwf    0x99, W
+	tblrd*+			         ; move one byte from PM to TABLAT, increment TBLPRT
+	movff    TABLAT, 0x604
+	call     encrypt_me
+;	movf     cipherkey, W 
+;	addwf    TABLAT, W		 ; add the cipher key to original letters
+;	xorwf    zorkey, W		 ; add zorkey to cipher encrypt
+;	xorwf    zorkey, W		 ; decrypt string
+;	movwf    0x99			 ; decrypt string  
+;	movf     cipherkey,W		 ; decrypt string
+;	subwf    0x99, W
+	call     decrypt_me
 	movwf    POSTINC0		 ;  move read data from TABLAT to (FSR0), increment FSR0
-	decfsz    counter, A    ; count down to zero
-	bra    loop 
+	decfsz   counter, A    ; count down to zero
+	bra      loop 
 		
-	;movlw	myTable_l	; output message to UART
-	;lfsr	2, myArray
-	;all	UART_Transmit_Message
+	;movlw	12	; output message to UART
+	;lfsr	2, 0x200
+	;call	UART_Transmit_Message
 
 	movlw    12
 	lfsr     0  , 0x200
