@@ -16,6 +16,8 @@
       <itemPath>UART.S</itemPath>
       <itemPath>config.S</itemPath>
       <itemPath>LCD.S</itemPath>
+      <itemPath>keypad.S</itemPath>
+      <itemPath>enc.S</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -24,6 +26,9 @@
     </logicalFolder>
     <itemPath>README.md</itemPath>
   </logicalFolder>
+  <sourceRootList>
+    <Elem>.</Elem>
+  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="default" type="2">
