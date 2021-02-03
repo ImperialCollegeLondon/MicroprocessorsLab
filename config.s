@@ -2,7 +2,7 @@
 
 ; Assembly source line config statements
 
-	#include <pic18_chip_select.inc>
+	#include <xc.inc>
 
 ; CONFIG1L
   CONFIG  RETEN = ON            ; VREG Sleep Enable bit (Enabled)

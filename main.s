@@ -1,4 +1,3 @@
-	#include <pic18_chip_select.inc>
 	#include <xc.inc>
 	
 psect	code, abs
