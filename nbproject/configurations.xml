@@ -12,17 +12,16 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>main.S</itemPath>
-      <itemPath>UART.S</itemPath>
-      <itemPath>config.S</itemPath>
-      <itemPath>LCD.S</itemPath>
+      <itemPath>config.s</itemPath>
+      <itemPath>main.s</itemPath>
+      <itemPath>UART.s</itemPath>
+      <itemPath>LCD.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
                    projectFiles="false">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
-    <itemPath>README.md</itemPath>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -35,7 +34,7 @@
         <platformTool>ICD3PlatformTool</platformTool>
         <languageToolchain>pic-as</languageToolchain>
         <languageToolchainVersion>2.30</languageToolchainVersion>
-        <platform>3</platform>
+        <platform>4</platform>
       </toolsSet>
       <packs>
         <pack name="PIC18F-K_DFP" vendor="Microchip" version="1.4.87"/>
