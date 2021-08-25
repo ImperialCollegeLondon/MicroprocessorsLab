@@ -2,6 +2,8 @@
 
 extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
 extrn	LCD_Setup, LCD_Write_Message
+extrn	RTCC_Setup, RTCC_Get_Seconds, RTCC_seconds
+
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -27,6 +29,8 @@ setup:	bcf	CFGS	; point to Flash program memory
 	bsf	EEPGD 	; access Flash program memory
 	call	UART_Setup	; setup UART
 	call	LCD_Setup	; setup UART
+	call	RTCC_Setup	; setup RTCC
+	clrf	TRISD, A	; set portD as digital output for seconds display
 	goto	start
 	
 	; ******* Main programme ****************************************
@@ -53,7 +57,10 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	lfsr	2, myArray
 	call	LCD_Write_Message
 
-	goto	$		; goto current line in code
+loop_clock_read:
+	call	RTCC_Get_Seconds    ; returns seconds value in W
+	movwf	PORTD, A	    ; write value out to PORTD 
+	goto	loop_clock_read	    ; goto loop_clock_read
 
 	; a delay subroutine if you need one, times around loop in delay_count
 delay:	decfsz	delay_count, A	; decrement until zero

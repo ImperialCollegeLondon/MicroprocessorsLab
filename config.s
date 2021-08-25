@@ -27,7 +27,7 @@
   CONFIG  WDTPS = 1048576       ; Watchdog Postscaler (1:1048576)
 
 ; CONFIG3L
-  CONFIG  RTCOSC = SOSCREF      ; RTCC Clock Select (RTCC uses SOSC)
+  CONFIG  RTCOSC = INTOSCREF    ; RTCC Clock Select (RTCC uses internal LF_OSC)
   CONFIG  EASHFT = ON           ; External Address Shift bit (Address Shifting enabled)
   CONFIG  ABW = MM              ; Address Bus Width Select bits (8-bit address bus)
   CONFIG  BW = 16               ; Data Bus Width (16-bit external bus mode)
