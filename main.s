@@ -9,10 +9,12 @@ main:
 	org	0x100		    ; Main code starts here at address 0x100
 start:
 	movlw 	0x0
-	movwf	TRISB, A	    ; Port C all outputs
+	movf	PORTD, W,A
+	movwf	TRISC, A	    ; Port C all outputs
+	
 	bra 	test
 loop:
-	movff 	0x06, PORTB
+	movff 	0x06, PORTD
 	incf 	0x06, W, A
 test:
 	movwf	0x06, A	    ; Test for end of loop condition
