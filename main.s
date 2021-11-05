@@ -3,7 +3,7 @@
 psect	code, abs
 	
 main:
-	org	0x0
+	org	0x0		    ; starts code at this address
 	goto	start
 
 	org	0x100		    ; Main code starts here at address 0x100
