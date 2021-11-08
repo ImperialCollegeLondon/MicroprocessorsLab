@@ -16,6 +16,16 @@ start:
 loop:
 	movff 	0x06, PORTC
 	incf 	0x06, W, A
+	call	delay, 0
+	NOP
+	GOTO 0x0
+	NOP
+	
+delay:	DECFSZ 0x20, F, ACCESS
+	bra delay
+	RETURN 0
+    
+    
 test:
 	movwf	0x06, A	    ; Test for end of loop condition
 	movf	PORTD, W, A ;modifies program so that it changes no times loop is run depending on which switch button is pushed
