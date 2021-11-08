@@ -15,17 +15,11 @@ start:
 	bra 	test		    ; branches to test
 loop:
 	movff 	0x06, PORTC
-	incf 	0x06, W, A
-	call	delay, 0
-	NOP
-	GOTO 0x0
-	NOP
-	
-delay:	DECFSZ 0x20, F, ACCESS
-	bra delay
-	RETURN 0
-    
-    
+	movlw	0xff		    ; moves value to w register	(in this case just largest possible - 255)
+	movwf	0x20, A		    ; moves value in w register to f
+	call	delay		    ; calls delay subroutine
+	incf 	0x06, W, A	    ; increments value in W register by 1 (0x06)
+	 
 test:
 	movwf	0x06, A	    ; Test for end of loop condition
 	movf	PORTD, W, A ;modifies program so that it changes no times loop is run depending on which switch button is pushed
@@ -33,4 +27,10 @@ test:
 	bra 	loop		    ; Not yet finished goto start of loop again
 	goto 	0x0		    ; Re-run program from start
 
+delay:	DECFSZ 0x20, F, A	    
+	bra delay
+	RETURN 0	
+	
 	end	main
+	
+
