@@ -52,12 +52,20 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	addlw	0xff		; don't send the final carriage return to LCD
 	lfsr	2, myArray
 	call	LCD_Write_Message
-
+	call	bigdelay
+	call	LCD_Setup
 	goto	$		; goto current line in code
-
+;	goto	start
 	; a delay subroutine if you need one, times around loop in delay_count
 delay:	decfsz	delay_count, A	; decrement until zero
 	bra	delay
 	return
-
+bigdelay:
+	call delay
+	call delay
+	call delay
+	call delay 
+	call delay
+	return
+	
 	end	rst
