@@ -16,6 +16,7 @@ keypad_Setup:
     movwf   SPBRG1, A	; set baud rate
     bsf	    TRISC, PORTC_TX1_POSN, A	; TX1 pin is output on RC6 pin
 					; must set TRISC6 to 1
+					
     return
 
 keypad_Transmit_Message:	    ; Message stored at FSR2, length stored in W
