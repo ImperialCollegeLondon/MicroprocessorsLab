@@ -16,6 +16,7 @@
       <itemPath>main.s</itemPath>
       <itemPath>UART.s</itemPath>
       <itemPath>LCD.s</itemPath>
+      <itemPath>keypad.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -34,7 +35,7 @@
         <platformTool>pk4hybrid</platformTool>
         <languageToolchain>pic-as</languageToolchain>
         <languageToolchainVersion>2.45</languageToolchainVersion>
-        <platform>4</platform>
+        <platform>3</platform>
       </toolsSet>
       <packs>
         <pack name="PIC18F-K_DFP" vendor="Microchip" version="1.4.87"/>
