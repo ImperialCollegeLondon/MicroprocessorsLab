@@ -58,7 +58,9 @@ Keypad_READ:
     movlw   1
     call    delay_ms
     
-    call    Test_none	; decode results, returns with result in working directory
+    movff   keyval, WREG    ; move keyvalue into WREG for decoder to work
+    
+    ;call    Test_none	; decode results, returns with result in working directory
 
     return
     
