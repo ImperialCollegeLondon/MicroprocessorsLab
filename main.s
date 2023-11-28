@@ -1,11 +1,15 @@
 #include <xc.inc>
 
 extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
-extrn	LCD_Setup, LCD_Write_Message
+extrn	LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D
+extrn	Keypad_INIT, Keypad_READ
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
 delay_count:ds 1    ; reserve one byte for counter in the delay routine
+pressed:    ds  1
+kb_pressed: ds	1   ; check if keypad pressed
+digit_input_counter: ds	1   ; counter for checking how many digits of the age has been inputted
     
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
 myArray:    ds 0x80 ; reserve 128 bytes for message data
@@ -25,39 +29,50 @@ rst: 	org 0x0
 	; ******* Programme FLASH read Setup Code ***********************
 setup:	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
-	call	UART_Setup	; setup UART
+	;call	UART_Setup	; setup UART
+	call	Keypad_INIT	; setup keypad
 	call	LCD_Setup	; setup UART
+	
+	movlw	0x00
+	movwf	TRISD
+	
+	movlw	0x00
+	movwf	TRISJ
+	
+	movlw	0
+	movwf	kb_pressed, A	; initialise this as 0, to indicate o key has been pressed
+	
+	movlw	2
+	movwf	digit_input_counter
+	
 	goto	start
 	
 	; ******* Main programme ****************************************
-start: 	lfsr	0, myArray	; Load FSR0 with address in RAM	
-	movlw	low highword(myTable)	; address of data in PM
-	movwf	TBLPTRU, A		; load upper bits to TBLPTRU
-	movlw	high(myTable)	; address of data in PM
-	movwf	TBLPTRH, A		; load high byte to TBLPTRH
-	movlw	low(myTable)	; address of data in PM
-	movwf	TBLPTRL, A		; load low byte to TBLPTRL
-	movlw	myTable_l	; bytes to read
-	movwf 	counter, A		; our counter register
-loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
-	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
-	decfsz	counter, A		; count down to zero
-	bra	loop		; keep going until finished
-		
-	movlw	myTable_l	; output message to UART
-	lfsr	2, myArray
-	call	UART_Transmit_Message
+start: 	
+	movff	digit_input_counter, PORTJ
+	movlw	0
+	cpfseq	digit_input_counter	; check if there are any digits left to input, skip if =
+	call	Age_Read
+	nop				; move on to the rest of the code
+	nop
+	movlw	0xFF
+	movwf	PORTJ
 
-	movlw	myTable_l	; output message to LCD
-	addlw	0xff		; don't send the final carriage return to LCD
-	lfsr	2, myArray
+	
+Age_Read: 	
+	call	Keypad_READ
+	movwf	PORTD
+	movwf	pressed
+	
+	movlw	0xFF
+	cpfslt	pressed	    ; do not output anything to LCD if there is no/invalid input
+	bra	Age_Read
+
+	lfsr	2, pressed
+	movlw	1
 	call	LCD_Write_Message
-
-	goto	$		; goto current line in code
-
-	; a delay subroutine if you need one, times around loop in delay_count
-delay:	decfsz	delay_count, A	; decrement until zero
-	bra	delay
-	return
-
+	decf	digit_input_counter
+	bra	start		
+	
 	end	rst
+	
