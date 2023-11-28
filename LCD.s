@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-global  LCD_Setup, LCD_Write_Message
+global  LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D
 
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1   ; reserve 1 byte for variable LCD_cnt_l
@@ -8,6 +8,7 @@ LCD_cnt_h:	ds 1   ; reserve 1 byte for variable LCD_cnt_h
 LCD_cnt_ms:	ds 1   ; reserve 1 byte for ms counter
 LCD_tmp:	ds 1   ; reserve 1 byte for temporary use
 LCD_counter:	ds 1   ; reserve 1 byte for counting through nessage
+TwoLineCounter: ds 1
 
 	LCD_E	EQU 5	; LCD enable bit
     	LCD_RS	EQU 4	; LCD register select bit
@@ -53,6 +54,10 @@ LCD_Loop_message:
 	call    LCD_Send_Byte_D
 	decfsz  LCD_counter, A
 	bra	LCD_Loop_message
+	movlw	2000
+	call	LCD_delay_ms
+	dcfsnz	TwoLineCounter, A
+	bra	SetTwoLines
 	return
 
 LCD_Send_Byte_I:	    ; Transmits byte stored in W to instruction reg
@@ -85,6 +90,13 @@ LCD_Send_Byte_D:	    ; Transmits byte stored in W to data reg
 	call	LCD_delay_x4us
 	return
 
+
+	
+SetTwoLines:
+	movlw	11000000B
+	call	LCD_Send_Byte_I
+	return
+	
 LCD_Enable:	    ; pulse enable bit LCD_E for 500ns
 	nop
 	nop
@@ -134,5 +146,4 @@ lcdlp1:	decf 	LCD_cnt_l, F, A	; no carry when 0x00 -> 0xff
 
 
     end
-
 
