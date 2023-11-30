@@ -23,11 +23,12 @@ psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
 myArray:    ds 0x80 ; reserve 128 bytes for message data
 
 psect	HRZ_data    
+ORG 0x1000 
 	; ******* myTable, data in programme memory, and its length *****
-myTable:
-	db	20, 18, 17, 15, 13, 11
-	myTable_l   EQU	6	; length of data
-	;align	2
+Database:
+	DB  20, 18, 17, 15, 13, 11
+	CurrentIndex EQU 0x30
+	align	2
     
 psect	code, abs	
 rst: 	org 0x0
@@ -42,6 +43,12 @@ setup:	bcf	CFGS	; point to Flash program memory
 	
 	movlw	0x00
 	movwf	TRISD
+	
+	movlw	0x00
+	movwf	TRISC
+	
+	movlw	0x00
+	movwf	TRISB
 	
 	movlw	0x00
 	movwf	TRISJ
@@ -64,50 +71,48 @@ start:
 	call	Divide_By_20		; return with HR_max/20 in WREG
 	movwf	HR_max_20		; save quotient of divison (integer) in variable HR_max_20
 	
-; The following code creates a table that contain the upper boundary value for HRZs.
-; Initialize loop counter
-	MOVLW	0
-	MOVWF	LOOP_COUNTER
-
-LOOP: ; Loop through the table
-    
-	MOVLW	myTable
-	ADDWF	LOOP_COUNTER, W		; Calculate the address of the current table element
+	; Set up the table read pointer
+	MOVLW	high(Database)
 	MOVWF	TBLPTRH
-	MOVLW	0
+	MOVLW	low(Database)
 	MOVWF	TBLPTRL
 
-	TBLRD*				; Read the current table element
-	MOVF	TABLAT, W ; Use the value in WREG as needed
-	MOVFF	TABLAT, PORTD
-
-; Your processing code goes here
-; Example: Increment the value and write it back to the table
-	;INCF	WREG, 0
-	;MOVWF	TABLAT
-	;MOVWF	PORTD
-	;TBLWT*
+    ; Initialize the index
+	;MOVLW	0
+	;MOVWF	CurrentIndex
+	;MOVFF	CurrentIndex, PORTC
 	
-	MOVFF	LOOP_COUNTER, 0x10
-	INCF	LOOP_COUNTER, 1		; Increment loop counter
+    ; Main loop to access the database
+AccessLoop:
+    ; Calculate the address of the current record
+	;MOVLW	0
+	;ADDWF	CurrentIndex, W
+	;MOVWF	TBLPTRU
 
-    ; Check if we've reached the end of the table
-	MOVLW	myTable_l
-	MOVWF	TABLE_INDEX_DIFF	; set variable to be equal to the size of the table
-	SUBFWB	LOOP_COUNTER, 0		; Store difference in WREG
-	MOVWF	STATUS_CHECK
+    ; Read the data from the database
+	TBLRD*+
+	MOVF	TABLAT, W ; Move the read data to WREG or other register
+	MOVFF	TABLAT, PORTD
+	
+	;INCF	CurrentIndex, 1
+		
+	;MOVFF	CurrentIndex, WREG
+	MOVFF	TBLPTRL, PORTC
+	MOVFF	TBLPTRL, WREG
+	
+	SUBLW	6
+	MOVWF	STATUS_CHECK	; difference between length of database and current index
+	MOVFF	STATUS_CHECK, PORTB
 	
 	MOVLW	0
-	CPFSEQ	STATUS_CHECK		; If f=W=0, end loop
-	GOTO	LOOP			; Repeat the loop
-	GOTO	END_LOOP
+	CPFSEQ	STATUS_CHECK	; If difference is zero, skip to end of the loop
+	GOTO	AccessLoop
+	GOTO	EndAccessLoop
+EndAccessLoop:
+	GOTO	$
 
-END_LOOP:
-	MOVLW	0xFF
-	MOVWF	PORTE
-    ; Your code continues...
-	nop				; move on with the rest of the code
-	nop
+
+
 	
 	goto	$
 
