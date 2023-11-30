@@ -1,6 +1,6 @@
 #include <xc.inc>
     
-global  Keypad_INIT, Keypad_READ
+global  Keypad_INIT, Keypad_READ, delay_ms
 
 psect	udata_acs   ; reserve data space in access ram
 Keypad_counter: ds    1	    ; reserve 1 byte for variable UART_counter
@@ -178,5 +178,6 @@ lp1:	decf 	cnt_l, F, A	; no carry when 0x00 -> 0xff
 	return			; carry reset so return
 
 	
+
 
 
