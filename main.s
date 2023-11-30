@@ -1,21 +1,18 @@
 #include <xc.inc>
 
-extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
+;extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D
 extrn	Keypad_INIT, Keypad_READ, delay_ms
-extrn	Find_Max_Heart_Rate
-extrn	Decode_First_Digit, Decode_Second_Digit
+extrn	Decode_First_Digit, Decode_Second_Digit, Read_Age_Input_Find_HR_Max
+extrn	Divide_By_20
 	
 psect	udata_acs   ; reserve data space in access ram
-counter:    ds 1    ; reserve one byte for a counter variable
-delay_count:ds 1    ; reserve one byte for counter in the delay routine
-pressed:    ds  1
+counter:    ds	1    ; reserve one byte for a counter variable
+delay_count:ds	1    ; reserve one byte for counter in the delay routine
+pressed:ds	1
 kb_pressed: ds	1   ; check if keypad pressed
-digit_input_counter: ds	1   ; counter for checking how many digits of the age has been inputted
-age_first: ds	1   ; first digit of age input
-age_second: ds	1   ; second digit of age input
-age: ds	1	    ; age, after combining the two digits
-maximum_heart_rate: ds	1   ; value for maximum heart rate is stored here
+HR_max: ds	1   ; the maximum heart rate calculated froma ge
+HR_max_20: ds	1   ; the quotient of HR_max divided by 20
     
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
 myArray:    ds 0x80 ; reserve 128 bytes for message data
@@ -45,91 +42,24 @@ setup:	bcf	CFGS	; point to Flash program memory
 	movlw	0x00
 	movwf	TRISJ
 	
-	movlw	0
-	movwf	kb_pressed, A	; initialise this as 0, to indicate o key has been pressed
-	
-	movlw	2
-	movwf	digit_input_counter	; initialise digit counter to 2, as our upper limit of age is 99
-	
+	;movlw	0
+	;movwf	kb_pressed, A	; initialise this as 0, to indicate o key has been pressed
+		
 	goto	start
 	
 	; ******* Main programme ****************************************
 
-Age_Read_1: 	
-
-	movff	digit_input_counter, PORTJ  ; output digit counter to PORTJ to visualise how many digits are left to be inputted
-	
-	call	Keypad_READ	; keypad read subroutine, value stored in W
-	call	Decode_First_Digit  ; decode first digit, return with 10s value in WREG
-	movwf	age_first	    ; save value in variable age_first
-	movwf	PORTD		; output to PORTD to visualise the number just inputted
-	
-	movlw	0xFF
-	call	delay_ms
-	
-	movlw	0xFF		; value of error message
-	cpfslt	age_first	; if no valid input, branch to Age_Read_1 to read from Keypad again; 
-	bra	Age_Read_1
-	decf	digit_input_counter,1 ; if there has been a valid input, decrement the digit counter and return
-	
-	return
-
-Age_Read_2: 	
-	
-	movff	digit_input_counter, PORTJ  ; output digit counter to PORTJ to visualise how many digits are left to be inputted
-	
-	call	Keypad_READ	; keypad read subroutine, value stored in W
-	call	Decode_Second_Digit  ; decode first digit, return with 10s value in WREG
-	movwf	age_second	    ; save value in variable age_first
-	movwf	PORTD		; output to PORTD to visualise the number just inputted
-	
-	movlw	0xFF
-	call	delay_ms
-	
-	movlw	0xFF		; value of error message
-	cpfslt	age_second	; if no valid input, branch to Age_Read_1 to read from Keypad again; 
-	bra	Age_Read_2
-	decf	digit_input_counter, 1 ; if there has been a valid input, decrement the digit counter and return
-	movff	digit_input_counter, PORTJ  ; output digit counter to PORTJ to visualise how many digits are left to be inputted
-	return
-		
-
 start: 	
-	; read in age input from keypad
-	movlw	2			    ; set WREG to 2, to deduce value in digit coubnter
-	cpfslt	digit_input_counter	    ; skip if smaller than two, otherwise read first digit
-	call	Age_Read_1
-	movlw	1
-	cpfslt	digit_input_counter	    ; skip if smaller than 1, otherwise read second digit
-	call	Age_Read_2
+	movlw	201			; for testing
+	movwf	HR_max			; for testing
 	
-	; add the two digits of age together
-	movff	age_first, WREG		    ; move first digit of age to WREG
-	addwf	age_second, W		    ; add second digit to WRED (age_first) and store result in WREG
-	movwf	age			    ; store age in memory
-	movff	age, PORTD 
+	;call	Read_Age_Input_Find_HR_Max  ; return with W = HRmax
+	;movwf	HR_max
 	
-	movlw	0xFF
-	movwf	PORTJ
+	movff	HR_max, WREG		; move HR_max into WREG for use with function
+	call	Divide_By_20		; return with HR_max/20 in WREG
+	movwf	HR_max_20		; save quotient of divison (integer) in variable HR_max_20
 	
-	movlw	0xFF
-	call	delay_ms
-	
-	movlw	0xFF
-	call	delay_ms
-	
-	movlw	0xFF
-	call	delay_ms
-	
-	movlw	0xFF
-	call	delay_ms		    ; delay to see on board 
-	
-	; find maximum heart rate
-	movff	age, WREG		    ; put age in WREG for use in subroutine
-	
-	call	Find_Max_Heart_Rate
-	movwf	maximum_heart_rate	    ; move value for maximum heart rate into variable
-
 	nop				; move on to the rest of the code
 	nop
 	

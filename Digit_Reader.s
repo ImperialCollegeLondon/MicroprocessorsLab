@@ -2,15 +2,104 @@
 
 ; This includes the subroutine to decode the input from the keypad for the two-digit age input
     
-global	Decode_First_Digit, Decode_Second_Digit
-
+global	Decode_First_Digit, Decode_Second_Digit, Read_Age_Input_Find_HR_Max
+extrn	Keypad_READ
+extrn	delay_ms
+extrn	Find_Max_Heart_Rate
+    
 ;psect	 data_section, global, class = DABS
 ;first_digit: ds	    1
 ;second_digit: ds    1
 
-psect	udata   ; reserve data space in access ram
+psect	udata_acs   ; reserve data space in access ram
 first_digit: ds	    1
 second_digit: ds    1
+digit_input_counter: ds	1   ; counter for checking how many digits of the age has been inputted
+age_first: ds	1   ; first digit of age input
+age_second: ds	1   ; second digit of age input
+age: ds	1	    ; age, after combining the two digits
+maximum_heart_rate: ds	1   ; value for maximum heart rate is stored here
+
+psect	digit_reader_code,class=CODE
+
+Age_Read_1: 	
+
+	movff	digit_input_counter, PORTJ  ; output digit counter to PORTJ to visualise how many digits are left to be inputted
+	
+	call	Keypad_READ	; keypad read subroutine, value stored in W
+	call	Decode_First_Digit  ; decode first digit, return with 10s value in WREG
+	movwf	age_first	    ; save value in variable age_first
+	movwf	PORTD		; output to PORTD to visualise the number just inputted
+	
+	movlw	0xFF
+	call	delay_ms
+	
+	movlw	0xFF		; value of error message
+	cpfslt	age_first	; if no valid input, branch to Age_Read_1 to read from Keypad again; 
+	bra	Age_Read_1
+	decf	digit_input_counter,1 ; if there has been a valid input, decrement the digit counter and return
+	
+	return
+
+Age_Read_2: 	
+	movff	digit_input_counter, PORTJ  ; output digit counter to PORTJ to visualise how many digits are left to be inputted
+	
+	call	Keypad_READ	; keypad read subroutine, value stored in W
+	call	Decode_Second_Digit  ; decode first digit, return with 10s value in WREG
+	movwf	age_second	    ; save value in variable age_first
+	movwf	PORTD		; output to PORTD to visualise the number just inputted
+	
+	movlw	0xFF
+	call	delay_ms
+	
+	movlw	0xFF		; value of error message
+	cpfslt	age_second	; if no valid input, branch to Age_Read_1 to read from Keypad again; 
+	bra	Age_Read_2
+	decf	digit_input_counter, 1 ; if there has been a valid input, decrement the digit counter and return
+	movff	digit_input_counter, PORTJ  ; output digit counter to PORTJ to visualise how many digits are left to be inputted
+	return
+
+Read_Age_Input_Find_HR_Max: 	
+	; read in age input from keypad
+	movlw	2
+	movwf	digit_input_counter
+	
+	movlw	2			    ; set WREG to 2, to deduce value in digit coubnter
+	cpfslt	digit_input_counter	    ; skip if smaller than two, otherwise read first digit
+	call	Age_Read_1
+	movlw	1
+	cpfslt	digit_input_counter	    ; skip if smaller than 1, otherwise read second digit
+	call	Age_Read_2
+	
+	; add the two digits of age together
+	movff	age_first, WREG		    ; move first digit of age to WREG
+	addwf	age_second, W		    ; add second digit to WRED (age_first) and store result in WREG
+	movwf	age			    ; store age in memory
+	movff	age, PORTD 
+	
+	movlw	0xFF
+	movwf	PORTJ
+	
+	movlw	0xFF
+	call	delay_ms
+	
+	movlw	0xFF
+	call	delay_ms
+	
+	movlw	0xFF
+	call	delay_ms
+	
+	movlw	0xFF
+	call	delay_ms		    ; delay to see on board 
+	
+	; find maximum heart rate
+	movff	age, WREG		    ; put age in WREG for use in subroutine
+	
+	call	Find_Max_Heart_Rate
+	movwf	maximum_heart_rate	    ; move value for maximum heart rate into variable
+	movff	maximum_heart_rate, WREG
+	
+	return
     
 Decode_First_Digit: ; Read input from keypad, interpret as the 10s value, return as literal
     movwf	first_digit, A
