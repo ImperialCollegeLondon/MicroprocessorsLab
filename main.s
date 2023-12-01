@@ -11,6 +11,8 @@ counter:    ds	1    ; reserve one byte for a counter variable
 delay_count:ds	1    ; reserve one byte for counter in the delay routine
 pressed:ds	1
 kb_pressed: ds	1   ; check if keypad pressed
+denominator_high:ds	1
+denominator_low:ds	1
 HR_max: ds	1   ; the maximum heart rate calculated froma ge
 HR_max_20: ds	1   ; the quotient of HR_max divided by 20
 LOOP_COUNTER:ds	1   ; loop counter for HRZ boundary value calculations
@@ -22,14 +24,13 @@ STATUS_CHECK:ds	1   ; use this in loop to check if the end of loop as been reach
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
 myArray:    ds 0x80 ; reserve 128 bytes for message data
 
-psect	HRZ_data    
-ORG 0x1000 
+psect	edata	    ; store data in EEPROM, so can read and write
+;ORG 0x1000 
 	; ******* myTable, data in programme memory, and its length *****
 Database:
 	DB  20, 18, 17, 15, 13, 11
-	CurrentIndex EQU 0x30
 	align	2
-    
+	
 psect	code, abs	
 rst: 	org 0x0
  	goto	setup
@@ -61,55 +62,53 @@ setup:	bcf	CFGS	; point to Flash program memory
 	; ******* Main programme ****************************************
 
 start: 	
-	movlw	201			; for testing
-	movwf	HR_max			; for testing
 	
-	;call	Read_Age_Input_Find_HR_Max  ; return with W = HRmax
-	;movwf	HR_max
-	
-	movff	HR_max, WREG		; move HR_max into WREG for use with function
-	call	Divide_By_20		; return with HR_max/20 in WREG
-	movwf	HR_max_20		; save quotient of divison (integer) in variable HR_max_20
-	
-	; Set up the table read pointer
-	MOVLW	high(Database)
-	MOVWF	TBLPTRH
-	MOVLW	low(Database)
-	MOVWF	TBLPTRL
+	call	Read_Age_Input_Find_HR_Max  ; return with W = HRmax
+	movwf	HR_max
 
-    ; Initialize the index
-	;MOVLW	0
-	;MOVWF	CurrentIndex
-	;MOVFF	CurrentIndex, PORTC
 	
     ; Main loop to access the database
+	;MOVLW	3
+	;MOVWF	HR_max
+	
 AccessLoop:
-    ; Calculate the address of the current record
-	;MOVLW	0
-	;ADDWF	CurrentIndex, W
-	;MOVWF	TBLPTRU
-
-    ; Read the data from the database
-	TBLRD*+
-	MOVF	TABLAT, W ; Move the read data to WREG or other register
-	MOVFF	TABLAT, PORTD
+	CLRF	EEADR		; start at address 0
+	BCF	EECON1, 6	; set for memory, bit 6 = CFGS
+	BCF	EECON1, 7	; set for data EEPROM, bit 7 = EEPGD
+	BCF	INTCON, 7	; disable interrupts, bit 7 = GIE
+	BSF	EECON1, 2	; write enable, bit 2 = WREN
 	
-	;INCF	CurrentIndex, 1
-		
-	;MOVFF	CurrentIndex, WREG
-	MOVFF	TBLPTRL, PORTC
-	MOVFF	TBLPTRL, WREG
+Loop:
+	MOVFF	EEADR, PORTB
+	BSF	EECON1, 0	; read current address, bit 0 = RD
+	nop			; need to have delay after read instruction for reading to complete
+	MOVFF	EEDATA, WREG	; W = eedata
+	MOVFF	EEDATA, PORTC
 	
+	
+	MULWF	HR_max
+	
+	CALL	Divide_By_20	
+	MOVWF	PORTB
+	MOVWF	EECON2		; move data from WREG to EECON2 waiting to be written
+	BSF	EECON1, 1	; to write data, bit 1  = WR
+	BTFSC	EECON1, 1
+	bra	$-2		; wait for write to complete
+	INCF	EEADR, 1	; Increment address and save back to EEADR
+	
+	MOVFF	EEADR, WREG	; Routine to check if the end has been reached
 	SUBLW	6
-	MOVWF	STATUS_CHECK	; difference between length of database and current index
-	MOVFF	STATUS_CHECK, PORTB
-	
+	MOVWF	STATUS_CHECK	
 	MOVLW	0
-	CPFSEQ	STATUS_CHECK	; If difference is zero, skip to end of the loop
-	GOTO	AccessLoop
-	GOTO	EndAccessLoop
-EndAccessLoop:
-	GOTO	$
+	CPFSEQ	STATUS_CHECK	; comparison to see if the end of the table has been reached
+	bra	Loop
+	bra	End_Write
+End_Write:
+	; Continue on with the rest of the code
+	BCF	EECON1, 2	; disenable writing function
+	MOVLW	0xFF
+	MOVWF	PORTD
+	goto	$  
 
 
 
