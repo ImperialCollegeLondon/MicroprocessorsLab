@@ -19,6 +19,8 @@
       <itemPath>Keypad.s</itemPath>
       <itemPath>Digit_Reader.s</itemPath>
       <itemPath>Calculations.s</itemPath>
+      <itemPath>Timer0.s</itemPath>
+      <itemPath>RRInterval.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
