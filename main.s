@@ -4,7 +4,7 @@
 extrn	LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D
 extrn	Keypad_INIT, Keypad_READ, delay_ms
 extrn	Decode_First_Digit, Decode_Second_Digit, Read_Age_Input_Find_HR_Max
-extrn	Divide_By_20
+extrn	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds	1    ; reserve one byte for a counter variable
@@ -66,52 +66,8 @@ start:
 	call	Read_Age_Input_Find_HR_Max  ; return with W = HRmax
 	movwf	HR_max
 
-	
-    ; Main loop to access the database
-	;MOVLW	3
-	;MOVWF	HR_max
-	
-AccessLoop:
-	CLRF	EEADR		; start at address 0
-	BCF	EECON1, 6	; set for memory, bit 6 = CFGS
-	BCF	EECON1, 7	; set for data EEPROM, bit 7 = EEPGD
-	BCF	INTCON, 7	; disable interrupts, bit 7 = GIE
-	BSF	EECON1, 2	; write enable, bit 2 = WREN
-	
-Loop:
-	MOVFF	EEADR, PORTB
-	BSF	EECON1, 0	; read current address, bit 0 = RD
-	nop			; need to have delay after read instruction for reading to complete
-	MOVFF	EEDATA, WREG	; W = eedata
-	MOVFF	EEDATA, PORTC
-	
-	
-	MULWF	HR_max
-	
-	CALL	Divide_By_20	
-	MOVWF	PORTB
-	MOVWF	EECON2		; move data from WREG to EECON2 waiting to be written
-	BSF	EECON1, 1	; to write data, bit 1  = WR
-	BTFSC	EECON1, 1
-	bra	$-2		; wait for write to complete
-	INCF	EEADR, 1	; Increment address and save back to EEADR
-	
-	MOVFF	EEADR, WREG	; Routine to check if the end has been reached
-	SUBLW	6
-	MOVWF	STATUS_CHECK	
-	MOVLW	0
-	CPFSEQ	STATUS_CHECK	; comparison to see if the end of the table has been reached
-	bra	Loop
-	bra	End_Write
-End_Write:
-	; Continue on with the rest of the code
-	BCF	EECON1, 2	; disenable writing function
-	MOVLW	0xFF
-	MOVWF	PORTD
-	goto	$  
-
-
-
+	movlw	200		; FICTITOUS HR MAX FOR TESTING
+	call	Load_HRZ_Table
 	
 	goto	$
 
