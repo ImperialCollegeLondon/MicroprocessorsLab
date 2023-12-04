@@ -1,6 +1,6 @@
 #include <xc.inc>
     
-global	Find_Max_Heart_Rate, Divide_By_20
+global	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table
     
 ; this includes subroutines for calculations: e.g. max heart rate calculation, boundary calculations
 psect	udata_acs
@@ -9,6 +9,8 @@ myNumerator:ds	    1
 myQuotient:ds	    1
 myRemainder:ds	    1
 myDiff:ds	    1
+STATUS_CHECK:ds	    1
+HR_max:ds	    1
   
 
 psect	calculations_code,class=CODE
@@ -56,4 +58,51 @@ Division_Done:
     RETURN
 DivisionError:
     RETURN
+    
+
+Load_HRZ_Table: ; call with HR_max in WREG
+	MOVWF	HR_max
+	
+	CLRF	EEADR		; start at address 0
+	BCF	EECON1, 6	; set for memory, bit 6 = CFGS
+	BCF	EECON1, 7	; set for data EEPROM, bit 7 = EEPGD
+	BSF	EECON1, 2	; write enable, bit 2 = WREN
+	
+Loop:
+	MOVFF	EEADR, PORTB
+	BSF	EECON1, 0	; read current address, bit 0 = RD
+	nop			; need to have delay after read instruction for reading to complete
+	MOVFF	EEDATA, WREG	; W = multiplier
+	MOVFF	EEDATA, PORTC
+	MULWF	HR_max
+
+	CALL	Divide_By_20	; (HR_max*multiplier)/20, return with quotient in WREG
+	
+	MOVWF	EEDATA		; move data to EE
+	
+	BCF	INTCON, 7	; disable interrupts, bit 7 = GIE
+
+	MOVLW	0x55
+	MOVWF	EECON2		
+	MOVLW	0xAA
+	MOVWF	EECON2
+	
+	BSF	EECON1, 1	; to write data, bit 1  = WR
+	BTFSC	EECON1, 1
+	bra	$-2		; wait for write to complete
+	INCF	EEADR, 1	; Increment address and save back to EEADR
+	
+	MOVFF	EEADR, WREG	; Routine to check if the end has been reached
+	SUBLW	6
+	MOVWF	STATUS_CHECK	
+	MOVLW	0
+	CPFSEQ	STATUS_CHECK	; comparison to see if the end of the table has been reached
+	bra	Loop
+	bra	End_Write
+End_Write:
+	; Continue on with the rest of the code
+	BCF	EECON1, 2	; disenable writing function
+	MOVLW	0xFF
+	MOVWF	PORTD
+	RETURN
     
