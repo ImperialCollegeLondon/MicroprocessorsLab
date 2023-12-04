@@ -35,6 +35,9 @@ psect	code, abs
 rst: 	org 0x0
  	goto	setup
 
+timer_interrupt_low:	org  0x0008
+	goto Timer
+
 	; ******* Programme FLASH read Setup Code ***********************
 setup:	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
