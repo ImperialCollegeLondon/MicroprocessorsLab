@@ -3,8 +3,8 @@
 psect	External_timer, class = CODE
 
 Timer_int_hi:
-	btfss TMROIF	;check this is a timer 0 interrupt
-	retfie	f   ;if not then return
+	btfss TMROIF	    ;check this is a timer 0 interrupt
+	retfie	f	    ;if not then return
 	btfss	PORTA, 4    ;check if bit 4 is set (skips next instruction if set)
 	bra	Turn_off
 	bra	Turn_on

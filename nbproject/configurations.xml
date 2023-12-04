@@ -21,6 +21,8 @@
       <itemPath>Calculations.s</itemPath>
       <itemPath>Timer0.s</itemPath>
       <itemPath>RRInterval.s</itemPath>
+      <itemPath>Timer_Example_Code.s</itemPath>
+      <itemPath>ctmu.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
