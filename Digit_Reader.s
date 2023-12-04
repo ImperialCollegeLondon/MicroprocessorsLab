@@ -6,10 +6,6 @@ global	Decode_First_Digit, Decode_Second_Digit, Read_Age_Input_Find_HR_Max
 extrn	Keypad_READ
 extrn	delay_ms
 extrn	Find_Max_Heart_Rate
-    
-;psect	 data_section, global, class = DABS
-;first_digit: ds	    1
-;second_digit: ds    1
 
 psect	udata_acs   ; reserve data space in access ram
 first_digit: ds	    1

@@ -63,8 +63,8 @@ setup:	bcf	CFGS	; point to Flash program memory
 
 start: 	
 	
-	call	Read_Age_Input_Find_HR_Max  ; return with W = HRmax
-	movwf	HR_max
+	;call	Read_Age_Input_Find_HR_Max  ; return with W = HRmax
+	;movwf	HR_max
 
 	movlw	200		; FICTITOUS HR MAX FOR TESTING
 	call	Load_HRZ_Table
