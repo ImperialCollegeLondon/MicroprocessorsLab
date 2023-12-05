@@ -4,7 +4,7 @@
 extrn	LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D
 extrn	Keypad_INIT, Keypad_READ, delay_ms
 extrn	Decode_First_Digit, Decode_Second_Digit, Read_Age_Input_Find_HR_Max
-extrn	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table
+extrn	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table, Determine_HRZ
 extrn	Timer_Setup, Timer_int_hi
 extrn	no_overflow, overflow
 	
@@ -70,18 +70,21 @@ start:
 	;call	Read_Age_Input_Find_HR_Max  ; return with W = HRmax
 	;movwf	HR_max
 
-	;movlw	10		; FICTITOUS HR MAX FOR TESTING
-	;call	Load_HRZ_Table
-	
-	; heart rate measurement here
-	;movlw	7		; FICTITOUS HR VALUE FOR TESTING
+	movlw	10		; FICTITOUS HR MAX FOR TESTING
+	call	Load_HRZ_Table
 	
 	;call	Determine_HRZ	; Zone value stored in WREG
 	;MOVWF	Measured_Zone
 	
-	call	overflow
+	;call	overflow
 	
-	; sift through HRZ_Table and find the relevant heart rate zone
+	; heart rate measurement here
+	movlw	7		; FICTITOUS HR VALUE FOR TESTING
+	
+	; sift through HRZ_Table and find the relevant heart rate zone, with measured HR in WREG
+	call	Determine_HRZ	; return with zone number in WREG
+	MOVWF	PORTF
+	
 	
 	goto	$
 
