@@ -1,11 +1,12 @@
 #include <xc.inc>
 
 ;extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
-extrn	LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D, Write_Welcome, SetTwoLines
+extrn	LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D
 extrn	Keypad_INIT, Keypad_READ, delay_ms
 extrn	Decode_First_Digit, Decode_Second_Digit, Read_Age_Input_Find_HR_Max
-extrn	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table, Determine_HRZ
-extrn	Timer_Setup, Timer_int_hi  
+extrn	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table
+extrn	Timer_Setup, Timer_int_hi
+extrn	no_overflow, overflow
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds	1    ; reserve one byte for a counter variable
@@ -69,16 +70,16 @@ start:
 	;call	Read_Age_Input_Find_HR_Max  ; return with W = HRmax
 	;movwf	HR_max
 
-	movlw	10		; FICTITOUS HR MAX FOR TESTING
-	call	Load_HRZ_Table
+	;movlw	10		; FICTITOUS HR MAX FOR TESTING
+	;call	Load_HRZ_Table
 	
 	; heart rate measurement here
-	movlw	7		; FICTITOUS HR VALUE FOR TESTING
+	;movlw	7		; FICTITOUS HR VALUE FOR TESTING
 	
-	call	Determine_HRZ	; Zone value stored in WREG
-	MOVWF	Measured_Zone
+	;call	Determine_HRZ	; Zone value stored in WREG
+	;MOVWF	Measured_Zone
 	
-    
+	call	overflow
 	
 	; sift through HRZ_Table and find the relevant heart rate zone
 	
