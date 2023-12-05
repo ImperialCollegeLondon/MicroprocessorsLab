@@ -1,6 +1,6 @@
 #include <xc.inc>
     
-global	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table
+global	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table, Determine_HRZ
     
 ; this includes subroutines for calculations: e.g. max heart rate calculation, boundary calculations
 psect	udata_acs
@@ -11,6 +11,8 @@ myRemainder:ds	    1
 myDiff:ds	    1
 STATUS_CHECK:ds	    1
 HR_max:ds	    1
+Zone_Value:ds	    1
+HR_Measured:ds	    1   ; reserve one byte for measured HR value from sensor
   
 
 psect	calculations_code,class=CODE
@@ -105,4 +107,27 @@ End_Write:
 	MOVLW	0xFF
 	MOVWF	PORTD
 	RETURN
-    
+
+Determine_HRZ: ; enter with measured HR stored in WREG
+	movwf	HR_Measured
+	
+	MOVLW	6
+	MOVWF	Zone_Value	; initialise at 6, highest possible zone value is 5
+	
+	CLRF	EEADR		; start at address 0
+	BCF	EECON1, 6	; set for memory, bit 6 = CFGS
+	BCF	EECON1, 7	; set for data EEPROM, bit 7 = EEPGD
+	BCF	EECON1, 2	; write enable, bit 2 = WREN	
+Table_Compare_Loop:
+	MOVFF	EEADR, PORTB
+	BSF	EECON1, 0	; read current address, bit 0 = RD
+	nop			; need to have delay after read instruction for reading to complete
+	MOVFF	EEDATA, WREG	; zone boundary
+	CPFSLT	HR_Measured	; f < W
+	bra	Output_Zone_Value
+	DECF	Zone_Value, 1
+	INCF	EEADR, 1
+	bra	Table_Compare_Loop
+Output_Zone_Value:
+	MOVFF	Zone_Value, WREG
+	return

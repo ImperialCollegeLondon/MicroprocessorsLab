@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-global  LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D
+global  LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D, Write_Welcome, SetTwoLines
 
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1   ; reserve 1 byte for variable LCD_cnt_l
@@ -9,10 +9,20 @@ LCD_cnt_ms:	ds 1   ; reserve 1 byte for ms counter
 LCD_tmp:	ds 1   ; reserve 1 byte for temporary use
 LCD_counter:	ds 1   ; reserve 1 byte for counting through nessage
 TwoLineCounter: ds 1
+counter:ds	    1
+myArray:ds	   1
 
 	LCD_E	EQU 5	; LCD enable bit
     	LCD_RS	EQU 4	; LCD register select bit
 
+psect	data    
+	; ******* Input Message, data in programme memory, and its length *****
+InputMessage:
+	db	'P','l','e','a','s','e',' ','I','n','p','u','t',' ','A','g','e',0x0a
+					; message, plus carriage return
+	myTable_l   EQU	17	; length of data
+	align	2
+	
 psect	lcd_code,class=CODE
     
 LCD_Setup:
@@ -50,14 +60,14 @@ LCD_Setup:
 LCD_Write_Message:	    ; Message stored at FSR2, length stored in W
 	movwf   LCD_counter, A
 LCD_Loop_message:
-	movf    POSTINC2, W, A
+	movf    POSTINC0, W, A
 	call    LCD_Send_Byte_D
 	decfsz  LCD_counter, A
 	bra	LCD_Loop_message
 	movlw	2000
 	call	LCD_delay_ms
-	dcfsnz	TwoLineCounter, A
-	bra	SetTwoLines
+	;dcfsnz	TwoLineCounter, A
+	;bra	SetTwoLines
 	return
 
 LCD_Send_Byte_I:	    ; Transmits byte stored in W to instruction reg
@@ -90,6 +100,26 @@ LCD_Send_Byte_D:	    ; Transmits byte stored in W to data reg
 	call	LCD_delay_x4us
 	return
 
+Write_Welcome:
+	lfsr	0, myArray	; Load FSR0 with address in RAM	
+	movlw	low highword(InputMessage)	; address of data in PM
+	movwf	TBLPTRU, A		; load upper bits to TBLPTRU
+	movlw	high(InputMessage)	; address of data in PM
+	movwf	TBLPTRH, A		; load high byte to TBLPTRH
+	movlw	low(InputMessage)	; address of data in PM
+	movwf	TBLPTRL, A		; load low byte to TBLPTRL
+	movlw	myTable_l	; bytes to read
+	movwf 	counter, A		; our counter register
+loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
+	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
+	decfsz	counter, A		; count down to zero
+	bra	loop		; keep going until finished
+
+	movlw	myTable_l	; output message to LCD
+	addlw	0xff		; don't send the final carriage return to LCD
+	lfsr	2, myArray
+	call	LCD_Write_Message
+    
 
 	
 SetTwoLines:

@@ -1,18 +1,17 @@
 #include <xc.inc>
 
 ;extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
-extrn	LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D
+extrn	LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D, Write_Welcome, SetTwoLines
 extrn	Keypad_INIT, Keypad_READ, delay_ms
 extrn	Decode_First_Digit, Decode_Second_Digit, Read_Age_Input_Find_HR_Max
-extrn	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table
+extrn	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table, Determine_HRZ
+extrn	Timer_Setup, Timer_int_hi  
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds	1    ; reserve one byte for a counter variable
 delay_count:ds	1    ; reserve one byte for counter in the delay routine
-pressed:ds	1
-kb_pressed: ds	1   ; check if keypad pressed
-denominator_high:ds	1
-denominator_low:ds	1
+Measured_Zone:ds	1
+HR_Measured:ds	1   ; reserve one byte for measured HR value from sensor
 HR_max: ds	1   ; the maximum heart rate calculated froma ge
 HR_max_20: ds	1   ; the quotient of HR_max divided by 20
 LOOP_COUNTER:ds	1   ; loop counter for HRZ boundary value calculations
@@ -30,13 +29,13 @@ psect	edata	    ; store data in EEPROM, so can read and write
 Database:
 	DB  20, 18, 17, 15, 13, 11
 	align	2
-	
+
 psect	code, abs	
 rst: 	org 0x0
  	goto	setup
 
 timer_interrupt_low:	org  0x0008
-	goto Timer
+	goto	Timer_int_hi
 
 	; ******* Programme FLASH read Setup Code ***********************
 setup:	bcf	CFGS	; point to Flash program memory  
@@ -65,12 +64,23 @@ setup:	bcf	CFGS	; point to Flash program memory
 	; ******* Main programme ****************************************
 
 start: 	
-	
+	;call	Write_Welcome
+	;bra	SetTwoLines
 	;call	Read_Age_Input_Find_HR_Max  ; return with W = HRmax
 	;movwf	HR_max
 
-	movlw	200		; FICTITOUS HR MAX FOR TESTING
+	movlw	10		; FICTITOUS HR MAX FOR TESTING
 	call	Load_HRZ_Table
+	
+	; heart rate measurement here
+	movlw	7		; FICTITOUS HR VALUE FOR TESTING
+	
+	call	Determine_HRZ	; Zone value stored in WREG
+	MOVWF	Measured_Zone
+	
+    
+	
+	; sift through HRZ_Table and find the relevant heart rate zone
 	
 	goto	$
 

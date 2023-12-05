@@ -1,9 +1,11 @@
 #include <xc.inc>
-    
+
+global	Timer_Setup, Timer_int_hi  
+
 psect	External_timer, class = CODE
 
 Timer_int_hi:
-	btfss TMROIF	    ;check this is a timer 0 interrupt
+	btfss	INTCON, 2	    ;check this is a timer 0 interrupt, bit 2 = TMR0IF
 	retfie	f	    ;if not then return
 	btfss	PORTA, 4    ;check if bit 4 is set (skips next instruction if set)
 	bra	Turn_off
@@ -24,9 +26,8 @@ Timer_Setup:
 	movwf	PORTA, A
 	movlw	11000100    ;set Timer0 to 8-bit, Fosc/4/32
 	movwf	T0CON, A    ;approximately  0.5ms rollover
-	bsf	TIMR0IE	    ;enable timer0 interrupt
+	bsf	INTCON, 5	    ;enable timer0 interrupt, bit 5 = TMR0IE
 	bsf	GIE	    ;enable all interrupts
-	goto	start
 	return
 
 
