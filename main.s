@@ -12,6 +12,11 @@ psect	udata_acs   ; reserve data space in access ram
 counter:    ds	1    ; reserve one byte for a counter variable
 delay_count:ds	1    ; reserve one byte for counter in the delay routine
 Measured_Zone:ds	1
+Num_H:ds	1
+Num_L:ds	1
+Den_H:ds	1
+Den_L:ds	1
+Quotient:ds	1
 HR_Measured:ds	1   ; reserve one byte for measured HR value from sensor
 HR_max: ds	1   ; the maximum heart rate calculated froma ge
 HR_max_20: ds	1   ; the quotient of HR_max divided by 20
@@ -70,8 +75,8 @@ start:
 	;call	Read_Age_Input_Find_HR_Max  ; return with W = HRmax
 	;movwf	HR_max
 
-	movlw	10		; FICTITOUS HR MAX FOR TESTING
-	call	Load_HRZ_Table
+	;movlw	10		; FICTITOUS HR MAX FOR TESTING
+	;call	Load_HRZ_Table
 	
 	;call	Determine_HRZ	; Zone value stored in WREG
 	;MOVWF	Measured_Zone
@@ -79,11 +84,59 @@ start:
 	;call	overflow
 	
 	; heart rate measurement here
-	movlw	7		; FICTITOUS HR VALUE FOR TESTING
+	;movlw	5		; FICTITOUS HR VALUE FOR TESTING
 	
 	; sift through HRZ_Table and find the relevant heart rate zone, with measured HR in WREG
-	call	Determine_HRZ	; return with zone number in WREG
-	MOVWF	PORTF
+	;call	Determine_HRZ	; return with zone number in WREG
+	;MOVWF	PORTB
+	
+	MOVLW	0x11
+	MOVWF	Num_H
+	MOVLW	0x22
+	MOVWF	Num_L
+	MOVLW	0x66
+	MOVWF	Den_H
+	MOVLW	0x66
+	MOVWF	Den_L
+	
+	call	Sixteen_Division
+	nop
+	nop
+	nop
+	
+Sixteen_Division:
+	MOVLW	0
+	MOVWF	Quotient		; initialise quotient
+High_byte_check:
+	MOVFF	Den_H, WREG
+	CPFSGT	Num_H
+	bra	End_Sixteen_Division	; when high byte of denominator is greater than numerator
+	bra	Low_byte_check		
+Low_byte_check:
+	MOVFF	Den_L, WREG
+	CPFSGT	Num_L
+	bra	Sixteen_Borrow	
+	bra	Sixteen_Subtraction
+Sixteen_Subtraction:
+	MOVFF	Den_L, WREG
+	SUBWF	Num_L, 1
+	MOVFF	Den_H, WREG
+	SUBWF	Num_H, 1
+	INCF	Quotient, 1
+	MOVFF	Quotient, PORTB
+	bra	High_byte_check
+Sixteen_Borrow:
+	DECF	Num_H, 1		; borrow from Num_H
+	MOVFF	Den_H, WREG
+	CPFSGT	Num_H
+	bra	End_Sixteen_Division
+	bra	Sixteen_Subtraction
+End_Sixteen_Division:	
+	MOVFF	Quotient, PORTC
+	; move results into results register pair
+	return
+    
+	
 	
 	
 	goto	$
