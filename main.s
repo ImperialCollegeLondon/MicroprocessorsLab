@@ -4,7 +4,7 @@
 extrn	LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D
 extrn	Keypad_INIT, Keypad_READ, delay_ms
 extrn	Decode_First_Digit, Decode_Second_Digit, Read_Age_Input_Find_HR_Max
-extrn	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table, Determine_HRZ
+extrn	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table, Determine_HRZ, IIR_Filter
 extrn	Timer_Setup, Timer_int_hi
 extrn	RR_int, RR_Setup, no_overflow, overflow, Sixteen_Division
 	
@@ -12,6 +12,7 @@ psect	udata_acs   ; reserve data space in access ram
 counter:    ds	1    ; reserve one byte for a counter variable
 delay_count:ds	1    ; reserve one byte for counter in the delay routine
 Measured_Zone:ds	1
+
 HR_Measured:ds	1   ; reserve one byte for measured HR value from sensor
 HR_max: ds	1   ; the maximum heart rate calculated froma ge
 HR_max_20: ds	1   ; the quotient of HR_max divided by 20
@@ -43,7 +44,7 @@ Timer_int_low:	org 0x0018
 	; ******* Programme FLASH read Setup Code ***********************
 setup:	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
-	;call	UART_Setup	; setup UART
+	call	UART_Setup	; setup UART
 	call	Keypad_INIT	; setup keypad
 	call	LCD_Setup	; setup UART
 	
@@ -52,13 +53,12 @@ setup:	bcf	CFGS	; point to Flash program memory
 	call	Timer_Setup
 	bsf	INTCON, 7	    ;enable all interrupts 7=GIE
 	bsf	INTCON, 6
+	bsf	INTCON, 4
 	bsf	PIE4, 2
 	bsf	ODCON2, 2
 	clrf	TMR1H
 	clrf	TMR1L
-	;bsf	INTCON, 6
-	;bsf	INTCON, 4
-	
+
 	movlw	0x00
 	movwf	TRISD
 	
@@ -70,6 +70,14 @@ setup:	bcf	CFGS	; point to Flash program memory
 	
 	movlw	00010000B
 	movwf	TRISG
+	
+	MOVLW	0x00
+	MOVWF	x1
+	MOVWF	x2
+	MOVWF	x1x2H
+	MOVWF	x1x2L
+	MOVWF	x1x2x3H
+	MOVWF	x1x2x3L
 	
 	
 	;movlw	0
@@ -91,23 +99,24 @@ start:
 	;call	Determine_HRZ	; Zone value stored in WREG
 	;MOVWF	Measured_Zone
 	
-	;call	overflow
-	goto	$
-	
+	; call	overflow
 	; heart rate measurement here
 	
 	
-	; sift through HRZ_Table and find the relevant heart rate zone, with measured HR in WREG
-	;call	Determine_HRZ	; return with zone number in WREG
-	;MOVWF	PORTB
 	
+	; call	Sixteen_Division
 	
-	;call	Sixteen_Division
-	nop
-	nop
-	nop
-	
+	; IIR Filter: subroutine is entered with most recent measurement in WREG, outputs the averaged value
 
+	; MOVLW	0x64		;Fictitious HR = 100
+	; call	IIR_Filter	; Output_HR = average of past 3 measurements
+
+	; sift through HRZ_Table and find the relevant heart rate zone, with measured HR in WREG
+	; call	Determine_HRZ	; return with zone number in WREG
+	; MOVWF	PORTB
+	
+	
+	
     
 	
 	

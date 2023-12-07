@@ -1,6 +1,6 @@
 #include <xc.inc>
     
-global	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table, Determine_HRZ
+global	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table, Determine_HRZ, IIR_Filter
     
 ; this includes subroutines for calculations: e.g. max heart rate calculation, boundary calculations
 psect	udata_acs
@@ -13,6 +13,17 @@ STATUS_CHECK:ds	    1
 HR_max:ds	    1
 Zone_Value:ds	    1
 HR_Measured:ds	    1   ; reserve one byte for measured HR value from sensor
+
+x1:ds		1
+x2:ds		1
+x3:ds		1
+x1x2H:ds	1
+x1x2L:ds	1
+x1x2x3H:ds	1
+x1x2x3L:ds	1
+myDen_low:ds	1
+myQuo:ds	1
+myRem:ds	1
   
 
 psect	calculations_code,class=CODE
@@ -131,3 +142,78 @@ Table_Compare_Loop:
 Output_Zone_Value:
 	MOVFF	Zone_Value, WREG
 	return
+
+IIR_Filter:
+	MOVWF	x3		; newest measurement WREG -> x3
+	
+	MOVFF	x1, WREG
+	ADDWF	x2, 0		; 200 + 256 = 456 = 1C8
+	MOVWF	x1x2L
+	
+	MOVLW	0x00
+	ADDWFC	x1x2H, 1		; carry to higher byte
+	INCF	x1x2L, 1
+	
+	; give newest measurement a higher weighting, multiply it by 2
+	MOVFF	x3, WREG	    ; newest measuremeng in WREG
+	MULLW	2		    ; double the weighting than the other two measurements
+	; results stored in PRODH:PRODL 2*HR_newest
+	MOVFF	PRODH, WREG
+	MOVFF	PRODL, WREG
+	ADDWF	x1x2L, 0	    ; 456 + 200 = 656 = 290
+	MOVWF	x1x2x3L		    ; contains lower byte of sum
+	
+	MOVFF	PRODH, WREG
+	ADDWFC	x1x2H, 0
+	MOVWF	x1x2x3H		    ; contains higher byte of sum
+	
+	; divide by 4
+	
+	MOVLW   3			; Think this needs to be n - 1, where n is the denominator??
+	MOVWF   myDen_low		; divide by 4 to find the average
+    
+	MOVLW   0		    ; Move 0 into WREG to check if denominator is zero
+	CPFSEQ  myDen_low
+	GOTO    Clear	    ; Check the MSB of myDenominator
+	GOTO    DivisionError    ; If zero, handle division by zero
+Clear:	; Perform division algorithm	
+	CLRF    myQuo      ; Clear the quotient register
+	CLRF    myRem      ; Clear the remainder register
+
+Division_Loop:
+	MOVFF   myDen_low, WREG
+	CPFSLT  x1x2x3L	    ; if lower byte is smaller than denominator: need to borrow
+	bra	Check_Equal
+	bra	Borrow_or_Done
+Borrow_or_Done:
+	MOVLW   0
+	CPFSGT  x1x2x3H		; Check if done, i.e. if the upper byte is zero.
+	bra	Division_Done
+	DECF    x1x2x3H, 1		; Borrow from higher byte
+	MOVFF   x1x2x3H, PORTB
+	bra	Subtract
+Check_Equal:
+	MOVFF	myDen_low, WREG
+	CPFSEQ	x1x2x3L
+	bra	Subtract
+	bra	Borrow_or_Done
+Subtract:
+	INCF    myQuo, 1	; Increment quotient
+	MOVFF   myQuo, PORTD
+	MOVFF   myDen_low, WREG
+	SUBWFB  x1x2x3L, 1		; myNumerator -= myDenominator
+	MOVFF   x1x2x3L, PORTC
+	bra	Division_Loop
+Division_Done:
+	call	Update_Vals
+	MOVFF   myQuo, WREG	; 656/4 = 164 ...
+	RETURN
+DivisionError:
+	RETURN
+Update_Vals:
+	MOVFF	x2, WREG
+	MOVWF	x1		; update x1 with value in x2
+	MOVFF	myQuo, WREG
+	MOVWF	x2		; update x2 with newest measurement
+	return
+	
