@@ -23,8 +23,10 @@ Turn_on:
 Timer_Setup:	
 	movlw	00100000B    ;set RA5 as input and rest of Port A as output
 	movwf	TRISA, A
-	movlw	11000100B    ;set Timer0 to 8-bit, Fosc/4/32
+	movlw	11000111B    ;set Timer0 to 8-bit, Fosc/4/256
 	movwf	T0CON, A    ;approximately  0.5ms rollover
 	bsf	INTCON, 5   ;enable timer0 interrupt, bit 5 = TIME0IE
 	bsf	INTCON, 7	    ;enable all interrupts 7=GIE
+	bcf	INTCON2, 2
 	return
+
