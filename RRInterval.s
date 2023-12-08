@@ -123,40 +123,42 @@ Addition:
 	bcf	PIR1, 2
 	movff	periodL, PORTF
 	retfie	f
+
+
 	
 Sixteen_Division:
 	MOVLW	0xEA
 	MOVWF	Num_H
 	MOVLW	0x60
 	MOVWF	Num_L		; initiate numerator to 60000 ms
-	MOVLW	0x02
-	MOVWF	Den_H
-	MOVLW	0x58
-	MOVWF	Den_L
+;	MOVLW	0x02
+;	MOVWF	Den_H 
+;	MOVLW	0x58
+;	MOVWF	Den_L
 
 	MOVLW	0
 	MOVWF	Heart_Rate		; initialise quotient
 High_byte_check:
-	MOVFF	Den_H, WREG
+	MOVFF	PRODH, WREG
 	CPFSGT	Num_H
 	bra	End_Sixteen_Division	; when high byte of denominator is greater than numerator
 	bra	Low_byte_check		
 Low_byte_check:
-	MOVFF	Den_L, WREG
+	MOVFF	PRODL, WREG
 	CPFSGT	Num_L
 	bra	Sixteen_Borrow	
 	bra	Sixteen_Subtraction
 Sixteen_Subtraction:
-	MOVFF	Den_L, WREG
+	MOVFF	PRODL, WREG
 	SUBWF	Num_L, 1
-	MOVFF	Den_H, WREG
+	MOVFF	PRODH, WREG
 	SUBWF	Num_H, 1
 	INCF	Heart_Rate, 1
 	MOVFF	Heart_Rate, PORTB
 	bra	High_byte_check
 Sixteen_Borrow:
 	DECF	Num_H, 1		; borrow from Num_H
-	MOVFF	Den_H, WREG
+	MOVFF	PRODH, WREG
 	CPFSGT	Num_H
 	bra	End_Sixteen_Division
 	bra	Sixteen_Subtraction
@@ -164,4 +166,4 @@ End_Sixteen_Division:
 	MOVFF	Heart_Rate, PORTC
 	MOVFF	Heart_Rate, WREG
 	; move results into results register pair
-	return	    ; return with Heart Rate in 
+	return	    ; return with Heart Rate in WREG

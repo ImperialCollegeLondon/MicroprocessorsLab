@@ -5,7 +5,7 @@ extrn	LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D
 extrn	Keypad_INIT, Keypad_READ, delay_ms
 extrn	Decode_First_Digit, Decode_Second_Digit, Read_Age_Input_Find_HR_Max
 extrn	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table, Determine_HRZ, IIR_Filter
-extrn	Timer_Setup
+extrn	Timer_Setup, TMR0_INT
 extrn	no_overflow, overflow, Sixteen_Division
 	
 psect	udata_acs   ; reserve data space in access ram
@@ -13,7 +13,7 @@ counter:    ds	1    ; reserve one byte for a counter variable
 delay_count:ds	1    ; reserve one byte for counter in the delay routine
 Measured_Zone:ds	1
 Time_Counter:ds	1
-prev_val:ds	1
+Count:ds	1
 HR_Measured:ds	1   ; reserve one byte for measured HR value from sensor
 HR_max: ds	1   ; the maximum heart rate calculated froma ge
 HR_max_20: ds	1   ; the quotient of HR_max divided by 20
@@ -51,7 +51,7 @@ setup:	bcf	CFGS	; point to Flash program memory
 
 ;	call	RR_Setup
 	movlw	0x00
-	movwf	Time_Counter
+	movwf	Time_Counter	; Initialise Time_Counter
 	call	Timer_Setup
 	
 	
@@ -108,7 +108,7 @@ start:
 	; call	Determine_HRZ	; return with zone number in WREG
 	; MOVWF	PORTB
 
-	movlw	0x01
+	movlw	0x00
 	movwf	PORTJ, A		; clear checking port
 Detection_Loop:
 	movlw	0x01
@@ -123,19 +123,20 @@ Update_and_Branch:
 Signal_Detected:
 	MOVFF	PORTD, PORTJ	; update LATJ with current value
 	MOVFF	Time_Counter, WREG	; move timer count to WREG
+	MOVWF	Count			; Store value in Count for calculation access
 	MOVFF	Time_Counter, PORTF	
 	MOVLW	0
+	call	Find_HR
 	MOVWF	Time_Counter		; reset time_counter
 	bra	Detection_Loop
-
 	
 	goto	$
-
- TMR0_INT:
-	INCF	Time_Counter, 1
-	MOVFF	Time_Counter, PORTH
-	bcf     TMR0IF
-	retfie	f
+	
+Find_HR_from_Overflow:
+	MOVFF	Count, WREG	; move count to W for multiplication
+	MULLW	8		; multiply counter with period of timer0, result stored in PRODH:PRODL
+	call	Sixteen_Division; denominator stored in PRODH, PRODL
+	return
 	
 	end	rst
 	
