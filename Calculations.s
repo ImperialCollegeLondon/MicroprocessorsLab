@@ -174,41 +174,41 @@ IIR_Filter:
     
 	MOVLW   0		    ; Move 0 into WREG to check if denominator is zero
 	CPFSEQ  myDen_low
-	GOTO    Clear	    ; Check the MSB of myDenominator
-	GOTO    DivisionError    ; If zero, handle division by zero
-Clear:	; Perform division algorithm	
+	GOTO    Clear_1	    ; Check the MSB of myDenominator
+	GOTO    DivisionError_1    ; If zero, handle division by zero
+Clear_1:	; Perform division algorithm	
 	CLRF    myQuo      ; Clear the quotient register
 	CLRF    myRem      ; Clear the remainder register
 
-Division_Loop:
+Division_Loop_1:
 	MOVFF   myDen_low, WREG
 	CPFSLT  x1x2x3L	    ; if lower byte is smaller than denominator: need to borrow
 	bra	Check_Equal
-	bra	Borrow_or_Done
-Borrow_or_Done:
+	bra	Borrow_or_Done_1
+Borrow_or_Done_1:
 	MOVLW   0
 	CPFSGT  x1x2x3H		; Check if done, i.e. if the upper byte is zero.
 	bra	Division_Done
 	DECF    x1x2x3H, 1		; Borrow from higher byte
 	MOVFF   x1x2x3H, PORTB
-	bra	Subtract
+	bra	Subtract_1
 Check_Equal:
 	MOVFF	myDen_low, WREG
 	CPFSEQ	x1x2x3L
-	bra	Subtract
-	bra	Borrow_or_Done
-Subtract:
+	bra	Subtract_1
+	bra	Borrow_or_Done_1
+Subtract_1:
 	INCF    myQuo, 1	; Increment quotient
 	MOVFF   myQuo, PORTD
 	MOVFF   myDen_low, WREG
 	SUBWFB  x1x2x3L, 1		; myNumerator -= myDenominator
 	MOVFF   x1x2x3L, PORTC
-	bra	Division_Loop
-Division_Done:
+	bra	Division_Loop_1
+Division_Done_1:
 	call	Update_Vals
 	MOVFF   myQuo, WREG	; 656/4 = 164 ...
 	RETURN
-DivisionError:
+DivisionError_1:
 	RETURN
 Update_Vals:
 	MOVFF	x2, WREG
