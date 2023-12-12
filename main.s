@@ -1,12 +1,13 @@
 #include <xc.inc>
 
 ;extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
-extrn	LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D
+extrn	LCD_Setup, Clear_LCD, LCD_Send_Byte_HR, LCD_Send_Byte_HRZ
 extrn	Keypad_INIT, Keypad_READ, delay_ms
 extrn	Decode_First_Digit, Decode_Second_Digit, Read_Age_Input_Find_HR_Max
 extrn	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table, Determine_HRZ, IIR_Filter
 extrn	Timer_Setup, TMR0_INT
 extrn	no_overflow, overflow, Sixteen_Division
+  
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds	1    ; reserve one byte for a counter variable
@@ -128,6 +129,12 @@ Signal_Detected:
 	MOVLW	0
 	call	Find_HR
 	MOVWF	Time_Counter		; reset time_counter
+	;Display HR on LCD
+	call	Clear_LCD
+	;Move HR to W
+	call	LCD_Send_Byte_HR
+	;Move HRZ to W
+	call	LCD_Send_Byte_HRZ
 	bra	Detection_Loop
 	
 	goto	$

@@ -1,7 +1,7 @@
 #include <xc.inc>
 
 global  LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D, Write_Welcome, SetTwoLines
-
+global Clear_LCD, LCD_Send_Byte_HR, LCD_Send_Byte_HRZ
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1   ; reserve 1 byte for variable LCD_cnt_l
 LCD_cnt_h:	ds 1   ; reserve 1 byte for variable LCD_cnt_h
@@ -57,18 +57,6 @@ LCD_Setup:
 	call	LCD_delay_x4us
 	return
 
-LCD_Write_Message:	    ; Message stored at FSR2, length stored in W
-	movwf   LCD_counter, A
-LCD_Loop_message:
-	movf    POSTINC0, W, A
-	call    LCD_Send_Byte_D
-	decfsz  LCD_counter, A
-	bra	LCD_Loop_message
-	movlw	2000
-	call	LCD_delay_ms
-	;dcfsnz	TwoLineCounter, A
-	;bra	SetTwoLines
-	return
 
 LCD_Send_Byte_I:	    ; Transmits byte stored in W to instruction reg
 	movwf   LCD_tmp, A
@@ -84,7 +72,28 @@ LCD_Send_Byte_I:	    ; Transmits byte stored in W to instruction reg
         call    LCD_Enable  ; Pulse enable Bit 
 	return
 
-LCD_Send_Byte_D:	    ; Transmits byte stored in W to data reg
+Clear_LCD:
+	movlw	00000001B	; display clear
+	call	LCD_Send_Byte_I
+	return
+	
+LCD_Send_Byte_HR:	    ; Transmits byte stored in W to data reg
+	movwf   LCD_tmp, A
+	swapf   LCD_tmp, W, A	; swap nibbles, high nibble goes first
+	andlw   0x0f	    ; select just low nibble
+	movwf   LATB, A	    ; output data bits to LCD
+	bsf	LATB, LCD_RS, A	; Data write set RS bit
+	call    LCD_Enable  ; Pulse enable Bit 
+	movf	LCD_tmp, W, A	; swap nibbles, now do low nibble
+	andlw   0x0f	    ; select just low nibble
+	movwf   LATB, A	    ; output data bits to LCD
+	bsf	LATB, LCD_RS, A	; Data write set RS bit	    
+        call    LCD_Enable  ; Pulse enable Bit 
+	movlw	10	    ; delay 40us
+	call	LCD_delay_x4us
+	return
+	
+LCD_Send_Byte_HRZ:	    ; Transmits byte stored in W to data reg
 	movwf   LCD_tmp, A
 	swapf   LCD_tmp, W, A	; swap nibbles, high nibble goes first
 	andlw   0x0f	    ; select just low nibble
@@ -100,16 +109,16 @@ LCD_Send_Byte_D:	    ; Transmits byte stored in W to data reg
 	call	LCD_delay_x4us
 	return
 
-Write_Welcome:
-	lfsr	0, myArray	; Load FSR0 with address in RAM	
-	movlw	low highword(InputMessage)	; address of data in PM
-	movwf	TBLPTRU, A		; load upper bits to TBLPTRU
-	movlw	high(InputMessage)	; address of data in PM
-	movwf	TBLPTRH, A		; load high byte to TBLPTRH
-	movlw	low(InputMessage)	; address of data in PM
-	movwf	TBLPTRL, A		; load low byte to TBLPTRL
-	movlw	myTable_l	; bytes to read
-	movwf 	counter, A		; our counter register
+;Write_Welcome:
+;	lfsr	0, myArray	; Load FSR0 with address in RAM	
+;	movlw	low highword(InputMessage)	; address of data in PM
+;	movwf	TBLPTRU, A		; load upper bits to TBLPTRU
+;	movlw	high(InputMessage)	; address of data in PM
+;	movwf	TBLPTRH, A		; load high byte to TBLPTRH
+;	movlw	low(InputMessage)	; address of data in PM
+;	movwf	TBLPTRL, A		; load low byte to TBLPTRL
+;	movlw	myTable_l	; bytes to read
+;	movwf 	counter, A		; our counter register
 loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
 	decfsz	counter, A		; count down to zero
