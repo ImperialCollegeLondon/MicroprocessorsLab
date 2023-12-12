@@ -14,6 +14,8 @@ counter:    ds	1    ; reserve one byte for a counter variable
 delay_count:ds	1    ; reserve one byte for counter in the delay routine
 Measured_Zone:ds	1
 Time_Counter:ds	1
+OverflowCounter_1:ds	1
+OverflowCounter_2:ds	1
 Count:ds	1
 HR_Measured:ds	1   ; reserve one byte for measured HR value from sensor
 HR_max: ds	1   ; the maximum heart rate calculated froma ge
@@ -48,7 +50,7 @@ rst: 	org 0x0
 Timer_Interrupt:org  0x0008
 	btfss   TMR0IF
 	retfie	f
-	INCF	Time_Counter, 1
+	goto	Increase_Interrupt
 	bcf     TMR0IF
 	movlw   10000100B	; Fcyc/128 = 125 KHz
 	movwf   T0CON, A
@@ -122,10 +124,10 @@ start:
 	; call	Determine_HRZ	; return with zone number in WREG
 	; MOVWF	PORTB
 
+	
 	movlw	0x00
 	movwf	PORTJ, A		; clear checking port
 Detection_Loop:
-	;call	Write_HR_LCD
 	movlw	0x00
 	CPFSGT	PORTD		; skip if pulse signal is high
 	bra	Update_and_Branch
@@ -141,17 +143,12 @@ Signal_Detected:
 	MOVFF	PORTD, PORTJ	; update LATJ with current value	
 	MOVLW	0xFF
 	MOVWF	PORTH
- 	MOVFF	Time_Counter, Count	; move timer count to WREG
- 	;MOVFF	Time_Counter, PORTF
- 	;MOVWF	Count			; Store value in Count for calculation access
- 	CLRF	Time_Counter, A		; reset time_counter
-	;call	Write_HR_LCD
-	;call	Find_HR_from_Overflow
+ 	MOVFF	OverflowCounter_2, Count	; move timer count to WREG, OverflowCounter increments 1 every 4.08ms
+ 	CLRF	OverflowCounter_2, A		; reset time_counter
 	MOVLW	1
-	MULWF	Count
+	MULWF	Count				; this multiplication stores the count in PRODH:PRODL
 	call	Sixteen_Division
-	;call	LCD_Write_Hex
-	;call	Clear_LCD
+
 	movlw	100
 	cpfslt	Count	;if less skip
 	call	Hundred
@@ -161,8 +158,7 @@ Signal_Detected:
 	movff	Count, WREG
 	addlw	'0'
 	call	LCD_Send_Byte_HR
-	;for HRZ
-	;call	LCD_Send_Byte_HRZ
+
 
 	bra	Detection_Loop
 	
@@ -187,7 +183,16 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	addlw	0xff		; don't send the final carriage return to LCD
 	lfsr	2, myArray
 	call	LCD_Write_Message
-    
+
+Increase_Interrupt:
+	INCF	OverflowCounter_1, 1
+	;MOVFF	OverflowCounter_1, WREG
+	BC	Increment_OFC2		; Branch if carry
+	return
+Increment_OFC2:
+	INCF	OverflowCounter_2, 1
+	;MOVFF	OverflowCounter_2, WREG
+	return
     
 Find_HR_from_Overflow:
 	MOVFF	Count, WREG	; move count to W for multiplication

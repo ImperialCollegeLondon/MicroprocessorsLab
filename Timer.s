@@ -21,7 +21,7 @@ psect	External_timer, class = CODE
 ;	retfie	f
 
 Timer_Setup:	
-	movlw   10000100B	; Fcyc/128 = 125 KHz
+	movlw   10000111B	; Fcyc/256 = 62.5 KHz
 	movwf   T0CON, A
 	bsf	GIE	    ;enable all interrupts 7=GIE
 	bsf	INTCON, 6

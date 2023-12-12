@@ -127,10 +127,10 @@ Addition:
 
 	
 Sixteen_Division:
-	MOVLW	0x75
+	MOVLW	0x39
 	MOVWF	Num_H
-	MOVLW	0x30
-	MOVWF	Num_L		; initiate numerator to 15000 ms
+	MOVLW	0x71
+	MOVWF	Num_L		; initiate numerator to 14705 ms
 ;	MOVLW	0x02
 ;	MOVWF	Den_H 
 ;	MOVLW	0x58
