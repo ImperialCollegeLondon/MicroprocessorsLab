@@ -127,10 +127,10 @@ Addition:
 
 	
 Sixteen_Division:
-	MOVLW	0xEA
+	MOVLW	0x75
 	MOVWF	Num_H
-	MOVLW	0x60
-	MOVWF	Num_L		; initiate numerator to 60000 ms
+	MOVLW	0x30
+	MOVWF	Num_L		; initiate numerator to 15000 ms
 ;	MOVLW	0x02
 ;	MOVWF	Den_H 
 ;	MOVLW	0x58
@@ -154,7 +154,7 @@ Sixteen_Subtraction:
 	MOVFF	PRODH, WREG
 	SUBWF	Num_H, 1
 	INCF	Heart_Rate, 1
-	MOVFF	Heart_Rate, PORTB
+	;MOVFF	Heart_Rate, PORTB
 	bra	High_byte_check
 Sixteen_Borrow:
 	DECF	Num_H, 1		; borrow from Num_H
@@ -167,3 +167,5 @@ End_Sixteen_Division:
 	MOVFF	Heart_Rate, WREG
 	; move results into results register pair
 	return	    ; return with Heart Rate in WREG
+	
+	

@@ -1,6 +1,6 @@
 #include <xc.inc>
     
-global	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table, Determine_HRZ, IIR_Filter
+global	Find_Max_Heart_Rate, Divide_By_20, Divide_By_Ten, Load_HRZ_Table, Determine_HRZ, IIR_Filter
     
 ; this includes subroutines for calculations: e.g. max heart rate calculation, boundary calculations
 psect	udata_acs
@@ -180,6 +180,47 @@ Clear_1:	; Perform division algorithm
 	CLRF    myQuo      ; Clear the quotient register
 	CLRF    myRem      ; Clear the remainder register
 
+Divide_By_Ten:
+    ; Ensure myDenominator is not zero
+	MOVWF   myNumerator
+; Think this needs to be n - 1, where n is the denominator??
+	MOVLW	9
+	MOVWF   myDenominator_low   ; divide by 20
+
+	MOVLW	0
+	CPFSEQ  myDenominator_low
+	GOTO    Clear_Ten	    ; Check the MSB of myDenominator
+	GOTO    DivisionError_Ten    ; If zero, handle division by zero
+Clear_Ten:   ; Perform division algorithm??
+	CLRF    myQuotient       ; Clear the quotient register
+	CLRF    myRemainder      ; Clear the remainder register
+
+Division_Loop_Ten:
+	MOVFF   myDenominator_low, WREG
+	CPFSLT  PRODL		; if lower byte is smaller than denominator: need to borrow
+	BRA	Subtract_Ten
+	BRA	Borrow_or_Done_Ten
+Borrow_or_Done_Ten:
+	MOVLW   0
+	CPFSGT  PRODH		; Check if done, i.e. if the upper byte is zero.
+	BRA	Division_Done_Ten
+	DECF	PRODH, 1
+	;MOVFF   PRODH, PORTB
+Subtract_Ten:
+	INCF	myQuotient, 1
+	MOVFF   myQuotient, PORTD
+	MOVFF	myDenominator_low, WREG
+	SUBWFB	PRODL, 1
+	;MOVFF	PRODL, PORTC
+	BRA	Division_Loop_Ten
+Division_Done_Ten:
+    ;MOVFF   myQuotient, PORTC
+	MOVFF   myQuotient, WREG    ; return with the quotient in the WREG
+	RETURN
+DivisionError_Ten:
+	RETURN
+
+	
 Division_Loop_1:
 	MOVFF   myDen_low, WREG
 	CPFSLT  x1x2x3L	    ; if lower byte is smaller than denominator: need to borrow
@@ -190,7 +231,7 @@ Borrow_or_Done_1:
 	CPFSGT  x1x2x3H		; Check if done, i.e. if the upper byte is zero.
 	bra	Division_Done
 	DECF    x1x2x3H, 1		; Borrow from higher byte
-	MOVFF   x1x2x3H, PORTB
+	;MOVFF   x1x2x3H, PORTB
 	bra	Subtract_1
 Check_Equal:
 	MOVFF	myDen_low, WREG
@@ -216,4 +257,7 @@ Update_Vals:
 	MOVFF	myQuo, WREG
 	MOVWF	x2		; update x2 with newest measurement
 	return
+	
+
+	
 	

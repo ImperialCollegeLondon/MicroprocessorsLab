@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-global	Timer_Setup, TMR0_INT
+global	Timer_Setup
 psect	External_timer, class = CODE
 
 ;Timer_int_hi:
@@ -19,16 +19,13 @@ psect	External_timer, class = CODE
 ;	bsf	PORTA, 4
 ;	bcf	INTCON, 2
 ;	retfie	f
-TMR0_INT:
-	INCF	Time_Counter, 1
-	MOVFF	Time_Counter, PORTH
-	bcf     TMR0IF
-	retfie	f
 
 Timer_Setup:	
-	movlw   10000110B	; Fcyc/128 = 125 KHz
+	movlw   10000100B	; Fcyc/128 = 125 KHz
 	movwf   T0CON, A
 	bsf	GIE	    ;enable all interrupts 7=GIE
 	bsf	INTCON, 6
 	bsf     INTCON, 5 ;TMR0IE
 	return
+
+	

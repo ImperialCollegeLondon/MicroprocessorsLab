@@ -1,11 +1,11 @@
 #include <xc.inc>
 
 ;extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
-extrn	LCD_Setup, Clear_LCD, LCD_Send_Byte_HR, LCD_Send_Byte_HRZ
+extrn	LCD_Setup, Clear_LCD, LCD_Send_Byte_HR, LCD_Send_Byte_HRZ, LCD_Write_Message, LCD_Write_Hex
 extrn	Keypad_INIT, Keypad_READ, delay_ms
 extrn	Decode_First_Digit, Decode_Second_Digit, Read_Age_Input_Find_HR_Max
-extrn	Find_Max_Heart_Rate, Divide_By_20, Load_HRZ_Table, Determine_HRZ, IIR_Filter
-extrn	Timer_Setup, TMR0_INT
+extrn	Find_Max_Heart_Rate, Divide_By_20, Divide_By_Ten, Load_HRZ_Table, Determine_HRZ, IIR_Filter
+extrn	Timer_Setup
 extrn	no_overflow, overflow, Sixteen_Division
   
 	
@@ -34,6 +34,13 @@ Database:
 	DB  20, 18, 17, 15, 13, 11
 	align	2
 
+psect	data    
+HRMessage:
+	db	'H','R','=',0x0a
+					; message, plus carriage return
+	myTable_l   EQU	4	; length of data
+	align	2
+
 psect	code, abs	
 rst: 	org 0x0
  	goto	setup
@@ -41,19 +48,22 @@ rst: 	org 0x0
 Timer_Interrupt:org  0x0008
 	btfss   TMR0IF
 	retfie	f
-	goto    TMR0_INT
+	INCF	Time_Counter, 1
+	bcf     TMR0IF
+	movlw   10000100B	; Fcyc/128 = 125 KHz
+	movwf   T0CON, A
+	retfie	f
 	
 	; ******* Programme FLASH read Setup Code ***********************
 setup:	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
 	;call	UART_Setup	; setup UART
 	;call	Keypad_INIT	; setup keypad
-	;call	LCD_Setup	; setup UART
 
-;	call	RR_Setup
 	movlw	0x00
 	movwf	Time_Counter	; Initialise Time_Counter
 	call	Timer_Setup
+	call	LCD_Setup
 	
 	
 	;bsf	INTCON, 4
@@ -67,6 +77,9 @@ setup:	bcf	CFGS	; point to Flash program memory
 
 	movlw	0x00
 	movwf	TRISF
+	
+	movlw	0x00
+	movwf	TRISC
 	
 	movlw	0xFF
 	movwf	TRISD
@@ -112,37 +125,98 @@ start:
 	movlw	0x00
 	movwf	PORTJ, A		; clear checking port
 Detection_Loop:
-	movlw	0x01
-	CPFSEQ	PORTD		; skip if pulse signal is high
+	;call	Write_HR_LCD
+	movlw	0x00
+	CPFSGT	PORTD		; skip if pulse signal is high
 	bra	Update_and_Branch
-	CPFSEQ	PORTJ		; skip if previous pulse was also high
+	CPFSGT	PORTJ		; skip if previous pulse was also high
 	call	Signal_Detected
 	bra	Update_and_Branch
 Update_and_Branch:
 	MOVFF	PORTD, PORTJ	; update LATJ with current value
+	MOVLW	0x00
+	MOVWF	PORTH
 	bra	Detection_Loop
 Signal_Detected:
-	MOVFF	PORTD, PORTJ	; update LATJ with current value
-	MOVFF	Time_Counter, WREG	; move timer count to WREG
-	MOVWF	Count			; Store value in Count for calculation access
-	MOVFF	Time_Counter, PORTF	
-	MOVLW	0
-	call	Find_HR
-	MOVWF	Time_Counter		; reset time_counter
-	;Display HR on LCD
-	call	Clear_LCD
-	;Move HR to W
+	MOVFF	PORTD, PORTJ	; update LATJ with current value	
+	MOVLW	0xFF
+	MOVWF	PORTH
+ 	MOVFF	Time_Counter, Count	; move timer count to WREG
+ 	;MOVFF	Time_Counter, PORTF
+ 	;MOVWF	Count			; Store value in Count for calculation access
+ 	CLRF	Time_Counter, A		; reset time_counter
+	;call	Write_HR_LCD
+	;call	Find_HR_from_Overflow
+	MOVLW	1
+	MULWF	Count
+	call	Sixteen_Division
+	;call	LCD_Write_Hex
+	;call	Clear_LCD
+	movlw	100
+	cpfslt	Count	;if less skip
+	call	Hundred
+	movff	Count, WREG
+	call	Divide_By_Ten
+	call	Ten
+	movff	Count, WREG
+	addlw	'0'
 	call	LCD_Send_Byte_HR
-	;Move HRZ to W
-	call	LCD_Send_Byte_HRZ
+	;for HRZ
+	;call	LCD_Send_Byte_HRZ
+
 	bra	Detection_Loop
 	
-	goto	$
-	
+	;goto	$
+
+Write_HR_LCD:
+	lfsr	0, myArray	; Load FSR0 with address in RAM	
+	movlw	low highword(HRMessage)	; address of data in PM
+	movwf	TBLPTRU, A		; load upper bits to TBLPTRU
+	movlw	high(HRMessage)	; address of data in PM
+	movwf	TBLPTRH, A		; load high byte to TBLPTRH
+	movlw	low(HRMessage)	; address of data in PM
+	movwf	TBLPTRL, A		; load low byte to TBLPTRL
+	movlw	myTable_l	; bytes to read
+	movwf 	counter, A		; our counter register
+loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
+	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
+	decfsz	counter, A		; count down to zero
+	bra	loop		; keep going until finished
+
+	movlw	myTable_l	; output message to LCD
+	addlw	0xff		; don't send the final carriage return to LCD
+	lfsr	2, myArray
+	call	LCD_Write_Message
+    
+    
 Find_HR_from_Overflow:
 	MOVFF	Count, WREG	; move count to W for multiplication
 	MULLW	8		; multiply counter with period of timer0, result stored in PRODH:PRODL
 	call	Sixteen_Division; denominator stored in PRODH, PRODL
+	return
+	
+TMR0_INT:
+	INCF	Time_Counter, 1
+	;MOVFF	Time_Counter, PORTH
+	bcf     TMR0IF
+	
+	movlw   10000100B	; Fcyc/128 = 125 KHz
+	movwf   T0CON, A
+	retfie	f
+
+Hundred:
+	movlw	1
+	addlw	'0'
+	call	LCD_Send_Byte_HR
+	movlw	100
+	subwf	Count, 1
+	return
+Ten:
+	addlw	'0'
+	call	LCD_Send_Byte_HR
+	mullw	10
+	movff	PRODL, WREG
+	subwf	Count, 1
 	return
 	
 	end	rst

@@ -5,7 +5,7 @@
 global	Decode_First_Digit, Decode_Second_Digit, Read_Age_Input_Find_HR_Max
 extrn	Keypad_READ
 extrn	delay_ms
-extrn	Find_Max_Heart_Rate
+;extrn	Find_Max_Heart_Rate
 extrn	LCD_Write_Message
 
 psect	udata_acs   ; reserve data space in access ram
@@ -95,7 +95,7 @@ Read_Age_Input_Find_HR_Max:
 	; find maximum heart rate
 	movff	age, WREG		    ; put age in WREG for use in subroutine
 	
-	call	Find_Max_Heart_Rate
+;	call	Find_Max_Heart_Rate
 	movwf	maximum_heart_rate	    ; move value for maximum heart rate into variable
 	movff	maximum_heart_rate, WREG
 	
@@ -257,6 +257,7 @@ Test_9_2:
     movlw	'9'
     movwf	POSTINC0
     retlw	9	
+
 
 
 
