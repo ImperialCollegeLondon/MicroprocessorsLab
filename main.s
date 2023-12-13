@@ -1,13 +1,14 @@
 #include <xc.inc>
 
 ;extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
-extrn	LCD_Setup, Clear_LCD, LCD_Send_Byte_HR, LCD_Send_Byte_HRZ, LCD_Write_Message, LCD_Write_Hex
+extrn	LCD_Setup, Clear_LCD, LCD_Send_Byte_HR, LCD_Send_Byte_HRZ, LCD_Write_Message, LCD_Write_Hex, LCD_clear, LCD_shift
 extrn	Keypad_INIT, Keypad_READ, delay_ms
 extrn	Decode_First_Digit, Decode_Second_Digit, Read_Age_Input_Find_HR_Max
-extrn	Find_Max_Heart_Rate, Divide_By_20, Divide_By_Ten, Load_HRZ_Table, Determine_HRZ, IIR_Filter
-extrn	Timer_Setup
+extrn	Divide_By_20, Divide_By_Ten, Load_HRZ_Table, Determine_HRZ, IIR_Filter
+extrn	Timer_Setup, Divide_By_Hundred
 extrn	no_overflow, overflow, Sixteen_Division
-  
+extrn	Heart_Rate_Zone_Msg, Heart_Rate_Msg, Welcome_Msg
+global	hr_msg, hrz_msg, welcome_msg, age_address_1, age_address_2
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds	1    ; reserve one byte for a counter variable
@@ -17,6 +18,10 @@ Time_Counter:ds	1
 OverflowCounter_1:ds	1
 OverflowCounter_2:ds	1
 Count:ds	1
+hundred_digit:ds    1
+ten_digit:ds	1
+single_digit:ds	1
+HR_Zone:ds	1
 HR_Measured:ds	1   ; reserve one byte for measured HR value from sensor
 HR_max: ds	1   ; the maximum heart rate calculated froma ge
 HR_max_20: ds	1   ; the quotient of HR_max divided by 20
@@ -25,7 +30,14 @@ TABLE_INDEX_DIFF:ds 1	; variable used to check end of loop condition
 STATUS_CHECK:ds	1   ; use this in loop to check if the end of loop as been reached
     TABLE_START_ADDRESS EQU 0xA0    ; table start address for HRZ boundary values
     TABLE_SIZE EQU 8		    ; this value needs to be n+1, where n is how many times you want to read/write the table
-    
+hr_msg		EQU 0xE0
+hrz_msg		EQU 0xF0
+measured_heart_rate_address EQU 0xD0
+measured_heart_rate_zone_address EQU 0xC0
+welcome_msg EQU 0xB0
+age_address_1 EQU	0xA0
+age_address_2 EQU	0xA1
+
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
 myArray:    ds 0x80 ; reserve 128 bytes for message data
 
@@ -50,7 +62,7 @@ rst: 	org 0x0
 Timer_Interrupt:org  0x0008
 	btfss   TMR0IF
 	retfie	f
-	goto	Increase_Interrupt
+	call	Increase_Interrupt
 	bcf     TMR0IF
 	movlw   10000100B	; Fcyc/128 = 125 KHz
 	movwf   T0CON, A
@@ -60,19 +72,18 @@ Timer_Interrupt:org  0x0008
 setup:	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
 	;call	UART_Setup	; setup UART
-	;call	Keypad_INIT	; setup keypad
+	call	Keypad_INIT	; setup keypad
 
 	movlw	0x00
-	movwf	Time_Counter	; Initialise Time_Counter
+	movwf	OverflowCounter_1	; Initialise Time_Counter
+	movwf	OverflowCounter_2
 	call	Timer_Setup
 	call	LCD_Setup
 	
-	
-	;bsf	INTCON, 4
-;	bsf	PIE4, 2
-;	bsf	ODCON2, 2
-;	clrf	TMR1H
-;	clrf	TMR1L
+	; load messages into database
+	call	Heart_Rate_Msg
+	call	Heart_Rate_Zone_Msg
+	call	Welcome_Msg
 
 	movlw	0x00
 	movwf	TRISH
@@ -97,13 +108,24 @@ setup:	bcf	CFGS	; point to Flash program memory
 	; ******* Main programme ****************************************
 
 start: 	
-	;call	Write_Welcome
-	;bra	SetTwoLines
-	;call	Read_Age_Input_Find_HR_Max  ; return with W = HRmax
-	;movwf	HR_max
+	call	LCD_clear
+	movlw	welcome_msg
+	movwf	FSR2
+	movlw	10		; because there are 11 letters
+	call	LCD_Write_Message
+	call	LCD_shift
+	
+	nop
+	nop
+	
+	call	Read_Age_Input_Find_HR_Max  ; return with W = HRmax
+	movwf	HR_max
+	movff	HR_max, PORTF
 
-	;movlw	10		; FICTITOUS HR MAX FOR TESTING
-	;call	Load_HRZ_Table
+	call	Load_HRZ_Table
+	
+	nop
+	nop
 	
 	;call	Determine_HRZ	; Zone value stored in WREG
 	;MOVWF	Measured_Zone
@@ -112,22 +134,10 @@ start:
 	; heart rate measurement here
 	
 	
-	
-	; call	Sixteen_Division
-	
-	; IIR Filter: subroutine is entered with most recent measurement in WREG, outputs the averaged value
-
-	; MOVLW	0x64		;Fictitious HR = 100
-	; call	IIR_Filter	; Output_HR = average of past 3 measurements
-
-	; sift through HRZ_Table and find the relevant heart rate zone, with measured HR in WREG
-	; call	Determine_HRZ	; return with zone number in WREG
-	; MOVWF	PORTB
-
-	
 	movlw	0x00
 	movwf	PORTJ, A		; clear checking port
 Detection_Loop:
+	
 	movlw	0x00
 	CPFSGT	PORTD		; skip if pulse signal is high
 	bra	Update_and_Branch
@@ -143,50 +153,90 @@ Signal_Detected:
 	MOVFF	PORTD, PORTJ	; update LATJ with current value	
 	MOVLW	0xFF
 	MOVWF	PORTH
- 	MOVFF	OverflowCounter_2, Count	; move timer count to WREG, OverflowCounter increments 1 every 4.08ms
- 	CLRF	OverflowCounter_2, A		; reset time_counter
-	MOVLW	1
-	MULWF	Count				; this multiplication stores the count in PRODH:PRODL
-	call	Sixteen_Division
+	
+	;still need to calculate heart rate from here
+	movff	OverflowCounter_1, WREG
+	mullw	8
+	MOVFF	PRODL, HR_Measured	; move timer count to WREG, OverflowCounter increments 1 every 4.08ms
 
-	movlw	100
-	cpfslt	Count	;if less skip
-	call	Hundred
-	movff	Count, WREG
-	call	Divide_By_Ten
-	call	Ten
-	movff	Count, WREG
-	addlw	'0'
-	call	LCD_Send_Byte_HR
-
-
+	; write to LCD
+	MOVFF	HR_Measured, WREG
+	call	Load_Measured_Heart_Rate	; load heart rate into database
+	
+	call	LCD_clear
+	movlw	hr_msg
+	movwf	FSR2
+	movlw	11		; because there are 11 letters
+	call	LCD_Write_Message
+	
+	; write heart rate
+	movlw	measured_heart_rate_address
+	movwf	FSR2
+	movlw	3		; assume 3 digits
+	call	LCD_Write_Message ; Display the number
+	call	LCD_shift
+	
+	CLRF	OverflowCounter_1, A		; reset time_counter
+	
+;	MOVFF	HR_Measured, WREG
+;	call	Determine_HRZ	; return with zone number in WREG
+	movlw	5
+	call	Load_Measured_Heart_Rate_Zone
+	
+	; write hr zone prompt
+	movlw	hrz_msg
+	movwf	FSR2
+	movlw	5		; because there are 5 letters
+	call	LCD_Write_Message
+	
+	; write zone information
+	movlw	measured_heart_rate_zone_address
+	movwf	FSR2
+	movlw	1
+	call	LCD_Write_Message ; Display the number
+	;call	LCD_shift
+	
 	bra	Detection_Loop
 	
-	;goto	$
+	
+	; IIR Filter: subroutine is entered with most recent measurement in WREG, outputs the averaged value
 
-Write_HR_LCD:
-	lfsr	0, myArray	; Load FSR0 with address in RAM	
-	movlw	low highword(HRMessage)	; address of data in PM
-	movwf	TBLPTRU, A		; load upper bits to TBLPTRU
-	movlw	high(HRMessage)	; address of data in PM
-	movwf	TBLPTRH, A		; load high byte to TBLPTRH
-	movlw	low(HRMessage)	; address of data in PM
-	movwf	TBLPTRL, A		; load low byte to TBLPTRL
-	movlw	myTable_l	; bytes to read
-	movwf 	counter, A		; our counter register
-loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
-	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
-	decfsz	counter, A		; count down to zero
-	bra	loop		; keep going until finished
+	; MOVLW	0x64		;Fictitious HR = 100
+	; call	IIR_Filter	; Output_HR = average of past 3 measurements
 
-	movlw	myTable_l	; output message to LCD
-	addlw	0xff		; don't send the final carriage return to LCD
-	lfsr	2, myArray
-	call	LCD_Write_Message
+	; sift through HRZ_Table and find the relevant heart rate zone, with measured HR in WREG
+	; call	Determine_HRZ	; return with zone number in WREG
+
+	
+	
+;	movlw	125
+;	call	Load_Measured_Heart_Rate
+;	
+;	movlw	5
+;	call	Load_Measured_Heart_Rate_Zone
+;	
+	
+	; write hr zone prompt
+;	movlw	hrz_msg
+;	movwf	FSR2
+;	movlw	5		; because there are 5 letters
+;	call	LCD_Write_Message
+;	
+;	; write zone information
+;	movlw	measured_heart_rate_zone_address
+;	movwf	FSR2
+;	movlw	1
+;	call	LCD_Write_Message ; Display the number
+;	call	LCD_shift
+
+	
+	
+	goto	$
 
 Increase_Interrupt:
 	INCF	OverflowCounter_1, 1
-	;MOVFF	OverflowCounter_1, WREG
+	MOVFF	OverflowCounter_1, WREG
+	MOVFF	OverflowCounter_1, PORTC
 	BC	Increment_OFC2		; Branch if carry
 	return
 Increment_OFC2:
@@ -200,29 +250,55 @@ Find_HR_from_Overflow:
 	call	Sixteen_Division; denominator stored in PRODH, PRODL
 	return
 	
-TMR0_INT:
-	INCF	Time_Counter, 1
-	;MOVFF	Time_Counter, PORTH
-	bcf     TMR0IF
+Load_Measured_Heart_Rate_Zone:
+	movwf	HR_Zone
 	
-	movlw   10000100B	; Fcyc/128 = 125 KHz
-	movwf   T0CON, A
-	retfie	f
-
-Hundred:
-	movlw	1
+	movlw	measured_heart_rate_zone_address
+	movwf	FSR0
+	
+	movff	HR_Zone, WREG
 	addlw	'0'
-	call	LCD_Send_Byte_HR
-	movlw	100
-	subwf	Count, 1
+	call	Write_to_FSR
 	return
-Ten:
+	
+Load_Measured_Heart_Rate:      ; enter with measured heart rate in WREG
+	movwf	Count
+	
+	movlw	measured_heart_rate_address
+	movwf	FSR0
+	
+	movff	Count, WREG
+	call	Divide_By_Hundred   ; return with quotient in WREG
+	movwf	hundred_digit
+	movff	hundred_digit, WREG
 	addlw	'0'
-	call	LCD_Send_Byte_HR
+	call	Write_to_FSR
+	movff	hundred_digit, WREG
+	mullw	100		   ; subtract hundred digit
+	movff	PRODL, WREG	   
+	subwf	Count, 1	    ; Count - PRODL (the hundred digit), store in Count
+	
+	movff	Count, WREG
+	call	Divide_By_Ten
+	movwf	ten_digit
+	movff	ten_digit, WREG
+	addlw	'0'
+	call	Write_to_FSR
+	movff	ten_digit, WREG
 	mullw	10
 	movff	PRODL, WREG
 	subwf	Count, 1
+	
+	movff	Count, WREG
+	addlw	'0'
+	call	Write_to_FSR
 	return
+		
+Write_to_FSR:
+	movwf	INDF0
+	incf	FSR0
+	return
+	
 	
 	end	rst
 	

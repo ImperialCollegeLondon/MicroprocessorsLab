@@ -1,6 +1,6 @@
 #include <xc.inc>
     
-global	Find_Max_Heart_Rate, Divide_By_20, Divide_By_Ten, Load_HRZ_Table, Determine_HRZ, IIR_Filter
+global	Divide_By_20, Divide_By_Ten, Load_HRZ_Table, Divide_By_Hundred,  Determine_HRZ, IIR_Filter
     
 ; this includes subroutines for calculations: e.g. max heart rate calculation, boundary calculations
 psect	udata_acs
@@ -27,11 +27,7 @@ myRem:ds	1
   
 
 psect	calculations_code,class=CODE
-    
-Find_Max_Heart_Rate:
-    sublw	220	; subtract age from 220 to find the maximum heart rate, store in WREG
-    return	
-    
+
 Divide_By_20:	    ; divide the number stored in WREG by 20
     ; Ensure myDenominator is not zero
     ;	MOVWF   myNumerator
@@ -63,7 +59,7 @@ Subtract:
     MOVFF   myQuotient, PORTD
     MOVFF   myDenominator_low, WREG
     SUBWFB  PRODL, 1		; myNumerator -= myDenominator
-    MOVFF   PRODL, PORTC
+    ;MOVFF   PRODL, PORTC
     bra	    Division_Loop
 Division_Done:
     ;MOVFF   myQuotient, PORTC
@@ -82,11 +78,11 @@ Load_HRZ_Table: ; call with HR_max in WREG
 	BSF	EECON1, 2	; write enable, bit 2 = WREN
 	
 Loop:
-	MOVFF	EEADR, PORTB
+	;MOVFF	EEADR, PORTB
 	BSF	EECON1, 0	; read current address, bit 0 = RD
 	nop			; need to have delay after read instruction for reading to complete
 	MOVFF	EEDATA, WREG	; W = multiplier
-	MOVFF	EEDATA, PORTC
+	;MOVFF	EEDATA, PORTC
 	MULWF	HR_max
 
 	CALL	Divide_By_20	; (HR_max*multiplier)/20, return with quotient in WREG
@@ -197,20 +193,20 @@ Clear_Ten:   ; Perform division algorithm??
 
 Division_Loop_Ten:
 	MOVFF   myDenominator_low, WREG
-	CPFSLT  PRODL		; if lower byte is smaller than denominator: need to borrow
+	CPFSLT  myNumerator		; if lower byte is smaller than denominator: need to borrow
 	BRA	Subtract_Ten
-	BRA	Borrow_or_Done_Ten
-Borrow_or_Done_Ten:
-	MOVLW   0
-	CPFSGT  PRODH		; Check if done, i.e. if the upper byte is zero.
 	BRA	Division_Done_Ten
-	DECF	PRODH, 1
-	;MOVFF   PRODH, PORTB
+;Borrow_or_Done_Ten:
+;	MOVLW   0
+;	CPFSGT  PRODH		; Check if done, i.e. if the upper byte is zero.
+;	BRA	Division_Done_Ten
+;	DECF	PRODH, 1
+;	;MOVFF   PRODH, PORTB
 Subtract_Ten:
 	INCF	myQuotient, 1
-	MOVFF   myQuotient, PORTD
+	;MOVFF   myQuotient, PORTD
 	MOVFF	myDenominator_low, WREG
-	SUBWFB	PRODL, 1
+	SUBWFB	myNumerator, 1
 	;MOVFF	PRODL, PORTC
 	BRA	Division_Loop_Ten
 Division_Done_Ten:
@@ -218,6 +214,46 @@ Division_Done_Ten:
 	MOVFF   myQuotient, WREG    ; return with the quotient in the WREG
 	RETURN
 DivisionError_Ten:
+	RETURN
+
+Divide_By_Hundred:
+    ; Ensure myDenominator is not zero
+	MOVWF   myNumerator	    ; enter routine with numerator in WREG
+; Think this needs to be n - 1, where n is the denominator??
+	MOVLW	99
+	MOVWF   myDenominator_low   ; divide by 20
+
+	MOVLW	0
+	CPFSEQ  myDenominator_low
+	GOTO    Clear_Hundred	    ; Check the MSB of myDenominator
+	GOTO    DivisionError_Hundred    ; If zero, handle division by zero
+Clear_Hundred:   ; Perform division algorithm??
+	CLRF    myQuotient       ; Clear the quotient register
+	CLRF    myRemainder      ; Clear the remainder register
+
+Division_Loop_Hundred:
+	MOVFF   myDenominator_low, WREG
+	CPFSLT  myNumerator		; if lower byte is smaller than denominator: need to borrow
+	BRA	Subtract_Hundred
+	BRA	Division_Done_Hundred
+;Borrow_or_Done_Hundred:
+;	MOVLW   0
+;	CPFSGT  PRODH		; Check if done, i.e. if the upper byte is zero.
+;	BRA	Division_Done_Hundred
+;	DECF	PRODH, 1
+;	;MOVFF   PRODH, PORTB
+Subtract_Hundred:
+	INCF	myQuotient, 1
+	;MOVFF   myQuotient, PORTD
+	MOVFF	myDenominator_low, WREG
+	SUBWF	myNumerator, 1
+	;MOVFF	PRODL, PORTC
+	BRA	Division_Loop_Hundred
+Division_Done_Hundred:
+    ;MOVFF   myQuotient, PORTC
+	MOVFF   myQuotient, WREG    ; return with the quotient in the WREG
+	RETURN
+DivisionError_Hundred:
 	RETURN
 
 	
@@ -243,7 +279,7 @@ Subtract_1:
 	MOVFF   myQuo, PORTD
 	MOVFF   myDen_low, WREG
 	SUBWFB  x1x2x3L, 1		; myNumerator -= myDenominator
-	MOVFF   x1x2x3L, PORTC
+	;MOVFF   x1x2x3L, PORTC
 	bra	Division_Loop_1
 Division_Done_1:
 	call	Update_Vals

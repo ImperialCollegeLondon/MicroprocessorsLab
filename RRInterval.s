@@ -77,7 +77,7 @@ Subtract_no:
 	movff	CCPR5L, WREG
 	movwf	prevtimeL
 	bcf	PIR4, 2	    ;clear CCP interrupt flag
-	movff	periodL, PORTF
+	;movff	periodL, PORTF
 	retfie	f
 	
 overflow:
@@ -121,7 +121,7 @@ Addition:
 	movwf	prevtimeL
 	bcf	PIR4, 2	    ;clear CCP interrupt flag
 	bcf	PIR1, 2
-	movff	periodL, PORTF
+	;movff	periodL, PORTF
 	retfie	f
 
 
@@ -135,9 +135,15 @@ Sixteen_Division:
 ;	MOVWF	Den_H 
 ;	MOVLW	0x58
 ;	MOVWF	Den_L
-
 	MOVLW	0
 	MOVWF	Heart_Rate		; initialise quotient
+Check_for_zero:
+	MOVLW	0
+	CPFSEQ	PRODL
+	bra	High_byte_check
+	CPFSEQ	PRODH
+	bra	High_byte_check
+	bra	End_Sixteen_Division
 High_byte_check:
 	MOVFF	PRODH, WREG
 	CPFSGT	Num_H
@@ -163,7 +169,7 @@ Sixteen_Borrow:
 	bra	End_Sixteen_Division
 	bra	Sixteen_Subtraction
 End_Sixteen_Division:	
-	MOVFF	Heart_Rate, PORTC
+	;MOVFF	Heart_Rate, PORTC
 	MOVFF	Heart_Rate, WREG
 	; move results into results register pair
 	return	    ; return with Heart Rate in WREG

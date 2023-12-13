@@ -21,6 +21,7 @@
       <itemPath>Calculations.s</itemPath>
       <itemPath>RRInterval.s</itemPath>
       <itemPath>Timer.s</itemPath>
+      <itemPath>Message.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
