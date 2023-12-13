@@ -73,17 +73,16 @@ setup:	bcf	CFGS	; point to Flash program memory
 	bsf	EEPGD 	; access Flash program memory
 	;call	UART_Setup	; setup UART
 	call	Keypad_INIT	; setup keypad
-
-	movlw	0x00
-	movwf	OverflowCounter_1	; Initialise Time_Counter
-	movwf	OverflowCounter_2
-	call	Timer_Setup
 	call	LCD_Setup
 	
 	; load messages into database
 	call	Heart_Rate_Msg
 	call	Heart_Rate_Zone_Msg
 	call	Welcome_Msg
+	
+	movlw	0x00
+ 	movwf	OverflowCounter_1	; Initialise Time_Counter
+ 	movwf	OverflowCounter_2
 
 	movlw	0x00
 	movwf	TRISH
@@ -112,28 +111,17 @@ start:
 	movlw	welcome_msg
 	movwf	FSR2
 	movlw	10		; because there are 11 letters
-	call	LCD_Write_Message
+	call	LCD_Write_Message   ; write welcome messgae, prompt age input
 	call	LCD_shift
-	
-	nop
-	nop
 	
 	call	Read_Age_Input_Find_HR_Max  ; return with W = HRmax
 	movwf	HR_max
-	movff	HR_max, PORTF
 
+	;movlw	3
 	call	Load_HRZ_Table
-	
-	nop
-	nop
-	
-	;call	Determine_HRZ	; Zone value stored in WREG
-	;MOVWF	Measured_Zone
-	
-	; call	overflow
-	; heart rate measurement here
-	
-	
+	 	
+ 	call	Timer_Setup	    ; this needs to happen after loading HRZ table, because interrupts interfere with eeprom
+
 	movlw	0x00
 	movwf	PORTJ, A		; clear checking port
 Detection_Loop:
@@ -178,9 +166,9 @@ Signal_Detected:
 	
 	CLRF	OverflowCounter_1, A		; reset time_counter
 	
-;	MOVFF	HR_Measured, WREG
-;	call	Determine_HRZ	; return with zone number in WREG
-	movlw	5
+	MOVFF	HR_Measured, WREG
+	call	Determine_HRZ	; return with zone number in WREG
+	;movlw	5
 	call	Load_Measured_Heart_Rate_Zone
 	
 	; write hr zone prompt
