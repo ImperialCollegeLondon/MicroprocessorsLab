@@ -1,7 +1,7 @@
 #include <xc.inc>
     
 global	Divide_By_20, Divide_By_Ten, Load_HRZ_Table, Divide_By_Hundred,  Determine_HRZ, IIR_Filter
-    
+global	measured_heart_rate_zone_address, heart_rate_zone_address
 ; this includes subroutines for calculations: e.g. max heart rate calculation, boundary calculations
 psect	udata_acs
 myDenominator_low:ds    1
@@ -53,7 +53,7 @@ Borrow_or_Done:
     CPFSGT  PRODH		; Check if done, i.e. if the upper byte is zero.
     bra	    Division_Done
     DECF    PRODH, 1		; Borrow from higher byte
-    MOVFF   PRODH, PORTB
+    ;sMOVFF   PRODH, PORTB
 Subtract:
     INCF    myQuotient, 1	; Increment quotient
     MOVFF   myQuotient, PORTD
@@ -72,10 +72,14 @@ DivisionError:
 Load_HRZ_Table: ; call with HR_max in WREG
 	MOVWF	HR_max
 	
+	movlw   heart_rate_zone_address
+	movwf   FSR0
+	
 	CLRF	EEADR		; start at address 0
 	BCF	EECON1, 6	; set for memory, bit 6 = CFGS
 	BCF	EECON1, 7	; set for data EEPROM, bit 7 = EEPGD
-	BSF	EECON1, 2	; write enable, bit 2 = WREN
+	;BSF	EECON1, 2	; write enable, bit 2 = WREN
+	;BCF	INTCON, 7	; disable interrupts, bit 7 = GIE
 	
 Loop:
 	;MOVFF	EEADR, PORTB
@@ -87,18 +91,19 @@ Loop:
 
 	CALL	Divide_By_20	; (HR_max*multiplier)/20, return with quotient in WREG
 	
-	MOVWF	EEDATA		; move data to EE
+	MOVWF	INDF0
+	INCF	FSR0
 	
-	BCF	INTCON, 7	; disable interrupts, bit 7 = GIE
-
-	MOVLW	0x55
-	MOVWF	EECON2		
-	MOVLW	0xAA
-	MOVWF	EECON2
-	
-	BSF	EECON1, 1	; to write data, bit 1  = WR
-	BTFSC	EECON1, 1
-	bra	$-2		; wait for write to complete
+;	MOVWF	EEDATA		; move data to EE
+;
+;	MOVLW	0x55
+;	MOVWF	EECON2		
+;	MOVLW	0xAA
+;	MOVWF	EECON2
+;	
+;	BSF	EECON1, 1	; to write data, bit 1  = WR
+;	BTFSC	EECON1, 1
+;	bra	$-2		; wait for write to complete
 	INCF	EEADR, 1	; Increment address and save back to EEADR
 	
 	MOVFF	EEADR, WREG	; Routine to check if the end has been reached
@@ -110,7 +115,7 @@ Loop:
 	bra	End_Write
 End_Write:
 	; Continue on with the rest of the code
-	BCF	EECON1, 2	; disenable writing function
+	;BCF	EECON1, 2	; disenable writing function
 	MOVLW	0xFF
 	MOVWF	PORTD
 	RETURN
@@ -118,23 +123,18 @@ End_Write:
 Determine_HRZ: ; enter with measured HR stored in WREG
 	movwf	HR_Measured
 	
+	movlw	heart_rate_zone_address
+	movwf	FSR2
+	
 	MOVLW	6
 	MOVWF	Zone_Value	; initialise at 6, highest possible zone value is 5
-	
-	CLRF	EEADR		; start at address 0
-	BCF	EECON1, 6	; set for memory, bit 6 = CFGS
-	BCF	EECON1, 7	; set for data EEPROM, bit 7 = EEPGD
-	BCF	EECON1, 2	; write enable, bit 2 = WREN	
+
 Table_Compare_Loop:
-	MOVFF	EEADR, PORTB
-	BSF	EECON1, 0	; read current address, bit 0 = RD
-	nop			; need to have delay after read instruction for reading to complete
-	MOVFF	EEDATA, WREG	; zone boundary
-	CPFSLT	HR_Measured	; f < W
+	MOVF	POSTINC2, W, A	    ; move heart rate to WREG
+	CPFSLT	HR_Measured	    ; skip if f < W
 	bra	Output_Zone_Value
-	DECF	Zone_Value, 1
-	INCF	EEADR, 1
-	bra	Table_Compare_Loop
+	decfsz	Zone_Value
+	bra	Table_Compare_Loop  
 Output_Zone_Value:
 	MOVFF	Zone_Value, WREG
 	return
@@ -174,8 +174,44 @@ IIR_Filter:
 	GOTO    DivisionError_1    ; If zero, handle division by zero
 Clear_1:	; Perform division algorithm	
 	CLRF    myQuo      ; Clear the quotient register
-	CLRF    myRem      ; Clear the remainder register
-
+	CLRF    myRem      ; Clear the remainder register	
+Division_Loop_1:
+	MOVFF   myDen_low, WREG
+	CPFSLT  x1x2x3L	    ; if lower byte is smaller than denominator: need to borrow
+	bra	Check_Equal
+	bra	Borrow_or_Done_1
+Borrow_or_Done_1:
+	MOVLW   0
+	CPFSGT  x1x2x3H		; Check if done, i.e. if the upper byte is zero.
+	bra	Division_Done_1
+	DECF    x1x2x3H, 1		; Borrow from higher byte
+	;MOVFF   x1x2x3H, PORTB
+	bra	Subtract_1
+Check_Equal:
+	MOVFF	myDen_low, WREG
+	CPFSEQ	x1x2x3L
+	bra	Subtract_1
+	bra	Borrow_or_Done_1
+Subtract_1:
+	INCF    myQuo, 1	; Increment quotient
+	MOVFF   myQuo, PORTD
+	MOVFF   myDen_low, WREG
+	SUBWFB  x1x2x3L, 1		; myNumerator -= myDenominator
+	;MOVFF   x1x2x3L, PORTC
+	bra	Division_Loop_1
+Division_Done_1:
+	bra	Update_Vals
+	MOVFF   myQuo, WREG	; 656/4 = 164 ...
+	RETURN
+DivisionError_1:
+	RETURN
+Update_Vals:
+	MOVFF	x2, WREG
+	MOVWF	x1		; update x1 with value in x2
+	MOVFF	myQuo, WREG
+	MOVWF	x2		; update x2 with newest measurement
+	return
+	
 Divide_By_Ten:
     ; Ensure myDenominator is not zero
 	MOVWF   myNumerator
@@ -255,45 +291,5 @@ Division_Done_Hundred:
 	RETURN
 DivisionError_Hundred:
 	RETURN
-
-	
-Division_Loop_1:
-	MOVFF   myDen_low, WREG
-	CPFSLT  x1x2x3L	    ; if lower byte is smaller than denominator: need to borrow
-	bra	Check_Equal
-	bra	Borrow_or_Done_1
-Borrow_or_Done_1:
-	MOVLW   0
-	CPFSGT  x1x2x3H		; Check if done, i.e. if the upper byte is zero.
-	bra	Division_Done
-	DECF    x1x2x3H, 1		; Borrow from higher byte
-	;MOVFF   x1x2x3H, PORTB
-	bra	Subtract_1
-Check_Equal:
-	MOVFF	myDen_low, WREG
-	CPFSEQ	x1x2x3L
-	bra	Subtract_1
-	bra	Borrow_or_Done_1
-Subtract_1:
-	INCF    myQuo, 1	; Increment quotient
-	MOVFF   myQuo, PORTD
-	MOVFF   myDen_low, WREG
-	SUBWFB  x1x2x3L, 1		; myNumerator -= myDenominator
-	;MOVFF   x1x2x3L, PORTC
-	bra	Division_Loop_1
-Division_Done_1:
-	call	Update_Vals
-	MOVFF   myQuo, WREG	; 656/4 = 164 ...
-	RETURN
-DivisionError_1:
-	RETURN
-Update_Vals:
-	MOVFF	x2, WREG
-	MOVWF	x1		; update x1 with value in x2
-	MOVFF	myQuo, WREG
-	MOVWF	x2		; update x2 with newest measurement
-	return
-	
-
 	
 	

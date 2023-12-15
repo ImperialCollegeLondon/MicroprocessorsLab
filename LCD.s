@@ -74,7 +74,7 @@ LCD_Hex_Nib:	    ; writes low nibble as hex character
 	call	LCD_Send_Byte_D ; write out ascii
 	return
 
-LCD_Write_Message:	    ; Message stored at FSR2, length stored in W
+LCD_Write_Message:	    ; Message address stored at FSR2, length stored in W
 	movwf   LCD_counter, A
 LCD_Loop_message:
 	movf    POSTINC2, W, A
@@ -82,6 +82,7 @@ LCD_Loop_message:
 	decfsz  LCD_counter, A
 	bra	LCD_Loop_message
 	return
+	
 LCD_shift:
 	movlw	0011000000B	; entry mode incr by 1 no shift
 	call	LCD_Send_Byte_I
@@ -237,6 +238,3 @@ lcdlp1:	decf 	LCD_cnt_l, F, A	; no carry when 0x00 -> 0xff
 
     end
 
-
-	
-	

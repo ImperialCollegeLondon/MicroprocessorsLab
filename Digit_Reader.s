@@ -61,7 +61,6 @@ Age_Read_2:
 	cpfslt	age_second	; if no valid input, branch to Age_Read_1 to read from Keypad again; 
 	bra	Age_Read_2
 	decf	digit_input_counter, 1 ; if there has been a valid input, decrement the digit counter and return
-	;call	LCD_Write_Message   ; digit stored in POSTINC0
 	movff	digit_input_counter, PORTJ  ; output digit counter to PORTJ to visualise how many digits are left to be inputted
 	
 	movlw	age_address_2
