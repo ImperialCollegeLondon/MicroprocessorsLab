@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-global 
+global	Keypad_Setup, Keypad_Read
     
 psect	udata_acs   ; reserve data space in access ram
 Keypad_counter: ds    1	    ; reserve 1 byte for variable Keypad_counter
@@ -43,11 +43,110 @@ Keypad_Read:
     movff   row, WREG
     addwf   col, W, A
     movwf   button, A
-    call    Keypad_Decode
+    call    Error_Check
     return
     
-Keypad_Decode:
+Error_Check:
+    movlw   0x00 ;ascii code for null 
+    cpfseq  button, A
+    bra	    Decode_0
+    retlw   0x00
+
+Decode_0:
+    movlw   0x30
+    cpfseq  button, A
+    bra	    Decode_1
+    retlw   '0'
     
+Decode_1:
+    movlw   0x31
+    cpfseq  button, A
+    bra	    Decode_2
+    retlw   '1'
+    
+Decode_2:
+    movlw   0x32
+    cpfseq  button, A
+    bra	    Decode_3
+    retlw   '2'
+    
+Decode_3:
+    movlw   0x33
+    cpfseq  button, A
+    bra	    Decode_4
+    retlw   '3'
+    
+Decode_4:
+    movlw   0x34
+    cpfseq  button, A
+    bra	    Decode_5
+    retlw   '4'
+    
+Decode_5:
+    movlw   0x35
+    cpfseq  button, A
+    bra	    Decode_6
+    retlw   '5'
+    
+Decode_6:
+    movlw   0x36
+    cpfseq  button, A
+    bra	    Decode_7
+    retlw   '6'
+    
+Decode_7:
+    movlw   0x37
+    cpfseq  button, A
+    bra	    Decode_8
+    retlw   '7'
+    
+Decode_8:
+    movlw   0x38
+    cpfseq  button, A
+    bra	    Decode_9
+    retlw   '8'
+
+Decode_9:
+    movlw   0x39
+    cpfseq  button, A
+    bra	    Decode_A
+    retlw   '9'
+    
+Decode_A:
+    movlw   0x41
+    cpfseq  button, A
+    bra	    Decode_B
+    retlw   'A'
+    
+Decode_B:
+    movlw   0x42
+    cpfseq  button, A
+    bra	    Decode_C
+    retlw   'B'
+    
+Decode_C:
+    movlw   0x43
+    cpfseq  button, A
+    bra	    Decode_D
+    retlw   'C'
+
+Decode_D:
+    movlw   0x44
+    cpfseq  button, A
+    bra	    Decode_E
+    retlw   'D'
+    
+Decode_E:
+    movlw   0x45
+    cpfseq  button, A
+    bra	    Decode_F
+    retlw   'E'
+    
+Decode_F:
+    movlw   0x46
+    cpfseq  button, A
+    retlw   0xFF
+    retlw   'F'
     
 ;Delay Routines
 delay_ms:		    ; delay given in ms in W
