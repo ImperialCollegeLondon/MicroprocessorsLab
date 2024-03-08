@@ -53,97 +53,97 @@ Error_Check:
     retlw   0x00
 
 Decode_0:
-    movlw   0x30
+    movlw   0xBE
     cpfseq  button, A
     bra	    Decode_1
     retlw   '0'
     
 Decode_1:
-    movlw   0x31
+    movlw   0x77
     cpfseq  button, A
     bra	    Decode_2
     retlw   '1'
     
 Decode_2:
-    movlw   0x32
+    movlw   0xB7
     cpfseq  button, A
     bra	    Decode_3
     retlw   '2'
     
 Decode_3:
-    movlw   0x33
+    movlw   0xD7
     cpfseq  button, A
     bra	    Decode_4
     retlw   '3'
     
 Decode_4:
-    movlw   0x34
+    movlw   0x7B
     cpfseq  button, A
     bra	    Decode_5
     retlw   '4'
     
 Decode_5:
-    movlw   0x35
+    movlw   0xBB
     cpfseq  button, A
     bra	    Decode_6
     retlw   '5'
     
 Decode_6:
-    movlw   0x36
+    movlw   0xDB
     cpfseq  button, A
     bra	    Decode_7
     retlw   '6'
     
 Decode_7:
-    movlw   0x37
+    movlw   0x7D
     cpfseq  button, A
     bra	    Decode_8
     retlw   '7'
     
 Decode_8:
-    movlw   0x38
+    movlw   0xBD
     cpfseq  button, A
     bra	    Decode_9
     retlw   '8'
 
 Decode_9:
-    movlw   0x39
+    movlw   0xDD
     cpfseq  button, A
     bra	    Decode_A
     retlw   '9'
     
 Decode_A:
-    movlw   0x41
+    movlw   0x7E
     cpfseq  button, A
     bra	    Decode_B
     retlw   'A'
     
 Decode_B:
-    movlw   0x42
+    movlw   0xDE
     cpfseq  button, A
     bra	    Decode_C
     retlw   'B'
     
 Decode_C:
-    movlw   0x43
+    movlw   0xEE
     cpfseq  button, A
     bra	    Decode_D
     retlw   'C'
 
 Decode_D:
-    movlw   0x44
+    movlw   0xED
     cpfseq  button, A
     bra	    Decode_E
     retlw   'D'
     
 Decode_E:
-    movlw   0x45
+    movlw   0xEB
     cpfseq  button, A
     bra	    Decode_F
     retlw   'E'
     
 Decode_F:
-    movlw   0x46
+    movlw   0xE7
     cpfseq  button, A
     retlw   0xFF
     retlw   'F'
