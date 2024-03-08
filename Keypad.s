@@ -22,27 +22,35 @@ Keypad_Setup:
     
     movlw   0x0F
     movwf   TRISE, A 
+    movlw   1
     call    delay_ms
     
     return 
     
 Keypad_Read: 
-    ;reading column
-    movlw   0x0F 
+    ; reading column
+    movlw   0x00
+    movwf   PORTE, A
+    movff   PORTE, col
+    
+    ; reading row
+    movlw   0xF0
     movwf   TRISE, A
+    movlw   1
     call    delay_ms
-    movff   PORTE, col, A
-   
-    ;reading row
-    movlw   0xF0 
-    movwf   TRISE, A
-    call    delay_ms
-    movff   PORTE, row, A
+    
+    movwf   PORTE, A
+    movff   PORTE, row
+ 
     
     ;finding button
     movff   row, WREG
-    addwf   col, W, A
+    iorwf   col, W, A
     movwf   button, A
+    movlw   0x0F
+    movwf   TRISE, A
+    
+    movff   button, WREG
     call    Error_Check
     return
     
@@ -53,37 +61,37 @@ Error_Check:
     retlw   0x00
 
 Decode_0:
-    movlw   0xBE
+    movlw   0x7D
     cpfseq  button, A
     bra	    Decode_1
     retlw   '0'
     
 Decode_1:
-    movlw   0x77
+    movlw   0xEE
     cpfseq  button, A
     bra	    Decode_2
     retlw   '1'
     
 Decode_2:
-    movlw   0xB7
+    movlw   0xED
     cpfseq  button, A
     bra	    Decode_3
     retlw   '2'
     
 Decode_3:
-    movlw   0xD7
+    movlw   0xEB
     cpfseq  button, A
     bra	    Decode_4
     retlw   '3'
     
 Decode_4:
-    movlw   0x7B
+    movlw   0xDE
     cpfseq  button, A
     bra	    Decode_5
     retlw   '4'
     
 Decode_5:
-    movlw   0xBB
+    movlw   0xDD
     cpfseq  button, A
     bra	    Decode_6
     retlw   '5'
@@ -95,7 +103,7 @@ Decode_6:
     retlw   '6'
     
 Decode_7:
-    movlw   0x7D
+    movlw   0xBE
     cpfseq  button, A
     bra	    Decode_8
     retlw   '7'
@@ -107,7 +115,7 @@ Decode_8:
     retlw   '8'
 
 Decode_9:
-    movlw   0xDD
+    movlw   0xBB
     cpfseq  button, A
     bra	    Decode_A
     retlw   '9'
@@ -119,25 +127,25 @@ Decode_A:
     retlw   'A'
     
 Decode_B:
-    movlw   0xDE
+    movlw   0x7B
     cpfseq  button, A
     bra	    Decode_C
     retlw   'B'
     
 Decode_C:
-    movlw   0xEE
+    movlw   0x77
     cpfseq  button, A
     bra	    Decode_D
     retlw   'C'
 
 Decode_D:
-    movlw   0xED
+    movlw   0xB7
     cpfseq  button, A
     bra	    Decode_E
     retlw   'D'
     
 Decode_E:
-    movlw   0xEB
+    movlw   0xD7
     cpfseq  button, A
     bra	    Decode_F
     retlw   'E'
