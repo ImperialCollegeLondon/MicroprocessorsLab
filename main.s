@@ -4,15 +4,19 @@ global	inputangle
 
 extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D, LCD_Clear
-extrn	Keypad_Setup, Keypad_Read
+extrn	Keypad_Setup, Keypad_Read, delay_ms
 extrn	Input_Angle
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:	ds 1    ; reserve one byte for a counter variable
 delay_count:	ds 1    ; reserve one byte for counter in the delay routine
-delay_count2:	ds 1
-delay_count3:	ds 1
-inputangle	EQU 0xA0
+input:		ds 1
+input_address	EQU 0xB0
+
+    inputangle	EQU 0xA0
+	
+psect	udata_bank4 ; reserve data anywhere in RAM
+myArray:    ds 0x80
 
 psect	code, abs	
 rst: 	org 0x0
@@ -27,7 +31,6 @@ setup:	bcf	CFGS	; point to Flash program memory
 	
 	call	Input_Angle  ; load message
 	
-	
 	goto	start
 	
 	; ******* Main programme ****************************************
@@ -35,43 +38,30 @@ start:
 	call	LCD_Clear
 	movlw	inputangle
 	movwf	FSR2
-	movlw	12
+	movlw	11
 	call	LCD_Write_Message
-	goto	$
+	movlw	0xFF
+	call	delay_ms
+	goto	User_Input
 
 User_Input:
-	call	Keypad_Read	; finds button pressed and stores in WREG
-	call	LCD_Send_Byte_D	; writes what is stored in W to LCD
-	call	delay_set		
-	goto	start		; goto current line in code
-
-	; a delay subroutine if you need one, times around loop in delay_count
-delay_set:
-	movlw	0xFF
-	movwf	delay_count
-	bra	delay	
-	return
-
-delay:
-	movlw	0xFF
-	movwf	delay_count2
-	call	delay_loop
-	decfsz	delay_count
-	bra	delay
-	return
+	movlw	input_address
+	movwf	FSR0
+    
+	call	Keypad_Read ; finds button pressed and stores in WREG
+	movwf	input
+	movwf	PORTD
 	
-delay_loop:
 	movlw	0xFF
-	movwf	delay_count3
-	call	delay_2
-	decfsz	delay_count2
-	bra	delay_loop
-	return
+	call	delay_ms
 
-delay_2:
-	decfsz	delay_count3
-	call	delay_2
-	return 
+	movlw	0x00
+	cpfslt	input
+	bra	User_Input
 	
+	movlw	input
+	call	LCD_Send_Byte_D ; writes what is stored in W to LCD
+	goto	$
 
 	end	rst
+	
