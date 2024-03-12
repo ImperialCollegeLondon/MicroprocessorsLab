@@ -7,7 +7,7 @@ psect Messages, class = CODE
  
 Input_Angle: 
 	movlw	inputangle
-	movwf	FSR0
+	movwf	FSR0	; points to start of message
 	
 	movlw	'I'
 	movwf	INDF0
@@ -29,7 +29,7 @@ Input_Angle:
 	movwf	INDF0
 	incf	FSR0, F
 	
-	movlw	''
+	movlw	' '
 	movwf	INDF0
 	incf	FSR0, F
 	
@@ -52,6 +52,5 @@ Input_Angle:
 	movlw	'e'
 	movwf	INDF0
 	incf	FSR0, F
-	
 	return 
 
