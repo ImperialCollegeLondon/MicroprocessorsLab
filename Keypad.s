@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-global	Keypad_Setup, Keypad_Read
+global	Keypad_Setup, Keypad_Read, delay_ms
     
 psect	udata_acs   ; reserve data space in access ram
 Keypad_counter: ds    1	    ; reserve 1 byte for variable Keypad_counter
@@ -32,6 +32,8 @@ Keypad_Read:
     movlw   0x00
     movwf   PORTE, A
     movff   PORTE, col
+    movlw   1
+    call    delay_ms
     
     ; reading row
     movlw   0xF0
