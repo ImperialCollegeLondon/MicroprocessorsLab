@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-global	Keypad_Setup, Keypad_Read, delay_ms
+global	Keypad_Setup, Keypad_Read
     
 psect	udata_acs   ; reserve data space in access ram
 Keypad_counter: ds    1	    ; reserve 1 byte for variable Keypad_counter
@@ -53,14 +53,14 @@ Keypad_Read:
     movwf   TRISE, A
     
     movff   button, WREG
-    call    Error_Check
+    ;call   Error_Check
     return
     
 Error_Check:
-    movlw   0x00 ;ascii code for null 
+    movlw   0xFF ;ascii code for null 
     cpfseq  button, A
     bra	    Decode_0
-    retlw   0x00
+    retlw   0xFF
 
 Decode_0:
     movlw   0x7D
