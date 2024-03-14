@@ -52,5 +52,9 @@ Input_Angle:
 	movlw	'e'
 	movwf	INDF0
 	incf	FSR0, F
+	
+	movlw	':'
+	movwf	INDF0
+	
 	return 
 
