@@ -38,15 +38,15 @@ setup:	bcf	CFGS	; point to Flash program memory
 	
 	; ******* Main programme ****************************************
 start: 	
-	movlw	inputangle
+	movlw	inputangle  ; Writes 'input angle' messge 
 	movwf	FSR2
 	movlw	12
-	call	LCD_Write_Message
+	call	LCD_Write_Message  
 	call	delay_ms
 	call	delay_ms
 	call	delay_ms
 	
-	call	User_Input_Setup
+	call	User_Input_Setup    ; Waits for user input (8-bit/2-digits)
 	goto	$
 
 	
