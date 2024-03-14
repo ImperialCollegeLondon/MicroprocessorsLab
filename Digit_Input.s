@@ -5,7 +5,7 @@ extrn	Keypad_Setup, Keypad_Read
 extrn	LCD_Setup, LCD_Write_Message, LCD_Clear, Second_Line
 extrn	input_address_1, input_address_2, delay_ms
     
-psect	udata_acs   ; reserve data space in access ram
+psect	udata_acs		    ; reserve data space in access ram
 digit_counter:	ds 1
 d1:		ds 1
 d2:		ds 1
@@ -13,20 +13,22 @@ input_1:	ds 1
 input_2:	ds 1
 before_dec:	ds 1
     
-psect	udata_bank4 ; reserve data anywhere in RAM
+psect	udata_bank4		    ; reserve data anywhere in RAM
 myArray:    ds 0x80
     
 psect input_code, class=CODE
     
 User_Input_Setup:
 	movlw	2
-	movwf	digit_counter	; setting the number of digits to be inputted as 2 
+	movwf	digit_counter	    ; setting the number of digits to be 
+				    ; inputted as 2 
 	
 	call	User_Input_1
 	call	User_Input_2
 	call	delay_ms
 	
-	movff	input_1, WREG
+	movff	input_1, WREG	    ; adding together the two digits to
+				    ; create one 8 bit number
 	addwf	input_2, W
 	movwf	before_dec
 	
@@ -37,22 +39,22 @@ User_Input_Setup:
 	return
 	
 User_Input_1:
-	movlw	input_address_1
+	movlw	input_address_1	    ; address to store first digit
 	movwf	FSR0
     
-	call	Keypad_Read ; finds button pressed and stores in WREG
-	call	Decode_Input_1
+	call	Keypad_Read	    ; finds button pressed and stores in WREG
+	call	Decode_Input_1	    ; Decodes digit
 	movwf	input_1
 	
 	movlw	0xFF
 	call	delay_ms
 	
 	movlw	0xFF
-	cpfslt	input_1
-	bra	User_Input_1
-	decf	digit_counter
+	cpfslt	input_1		    ; Checks for valid input
+	bra	User_Input_1	    ; repeat if valid button not pressed
+	decf	digit_counter	    ; decrements digit count by 1
 	
-	call	Second_Line
+	call	Second_Line	    ; Writes digit to second line of LCD 
 	movlw	input_address_1
 	movwf	FSR2
 	movlw	1
@@ -61,20 +63,20 @@ User_Input_1:
 	return
 	
 User_Input_2:
-	movlw	input_address_2
+	movlw	input_address_2	    ; address to store second digit
 	movwf	FSR0
     
-	call	Keypad_Read ; finds button pressed and stores in WREG
-	call	Decode_Input_2
+	call	Keypad_Read	    ; finds button pressed and stores in WREG
+	call	Decode_Input_2	    ; Decodes digit 
 	movwf	input_2
 	
 	movlw	0xFF
 	call	delay_ms
 	
 	movlw	0xFF
-	cpfslt	input_2
-	bra	User_Input_2
-	decf	digit_counter
+	cpfslt	input_2		    ; Checks for valid input 
+	bra	User_Input_2	    ; repeat if valid button not pressed
+	decf	digit_counter	    ; decrements digit counter by 1
 	
 	movlw	input_address_2
 	movwf	FSR2
@@ -86,7 +88,7 @@ User_Input_2:
 Decode_Input_1:
     movwf   d1, A
 Error_Check_1:
-    movlw   0xFF ;ascii code for null 
+    movlw   0xFF		    
     cpfseq  d1, A
     bra	    Decode_0_1
     retlw   0xFF
@@ -95,7 +97,7 @@ Decode_0_1:
     movlw   0x7D
     cpfseq  d1, A
     bra	    Decode_1_1
-    movlw   '0'
+    movlw   '0'	    
     movwf   INDF0
     incf    FSR0
     retlw   0
@@ -107,7 +109,7 @@ Decode_1_1:
     movlw   '1'
     movwf   INDF0
     incf    FSR0
-    retlw   10
+    retlw   10			   ; stores first digit as tens 
     
 Decode_2_1:
     movlw   0xED
@@ -185,7 +187,7 @@ Decode_9_1:
 Decode_Input_2:
     movwf   d2, A
 Error_Check_2:
-    movlw   0xFF ;ascii code for null 
+    movlw   0xFF  
     cpfseq  d2, A
     bra	    Decode_0_2
     retlw   0xFF
@@ -206,7 +208,7 @@ Decode_1_2:
     movlw   '1'
     movwf   INDF0
     incf    FSR0
-    retlw   1
+    retlw   1				; stores second digit as units 			
     
 Decode_2_2:
     movlw   0xED
