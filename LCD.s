@@ -85,7 +85,7 @@ LCD_Send_Byte_D:	    ; Transmits byte stored in W to data reg
 	call	LCD_delay_x4us
 	return
 
-LCD_Enable:	    ; pulse enable bit LCD_E for 500ns
+LCD_Enable:			     ; pulse enable bit LCD_E for 500ns
 	nop
 	nop
 	nop
@@ -107,21 +107,21 @@ LCD_Enable:	    ; pulse enable bit LCD_E for 500ns
     
 	
 LCD_Clear:
-	movlw	00000001B
+	movlw	00000001B	    ; Clears LCD screen 
 	call	LCD_Send_Byte_I
 	return
 	
 Second_Line:
-    movlw   0011000000B
+    movlw   0011000000B		    ; Points to bottom row of LCD screen 
     call    LCD_Send_Byte_I
     movwf   10
     call    LCD_delay_ms
     return
 	
 ; ** a few delay routines below here as LCD timing can be quite critical ****
-LCD_delay_ms:		    ; delay given in ms in W
+LCD_delay_ms:			    ; delay given in ms in W
 	movwf	LCD_cnt_ms, A
-lcdlp2:	movlw	250	    ; 1 ms delay
+lcdlp2:	movlw	250		    ; 1 ms delay
 	call	LCD_delay_x4us	
 	decfsz	LCD_cnt_ms, A
 	bra	lcdlp2
