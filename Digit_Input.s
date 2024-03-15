@@ -1,8 +1,9 @@
 #include <xc.inc>
     
 global	User_Input_Setup
-extrn	Keypad_Setup, Keypad_Read
-extrn	LCD_Setup, LCD_Write_Message, LCD_Clear, Second_Line
+extrn	Keypad_Read
+extrn	LCD_Write_Message, LCD_Clear, Second_Line, Shift_Left
+extrn	LCD_Send_Byte_D
 extrn	input_address_1, input_address_2, delay_ms
     
 psect	udata_acs		    ; reserve data space in access ram
@@ -13,24 +14,30 @@ input_1:	ds 1
 input_2:	ds 1
 before_dec:	ds 1
     
+    
 psect	udata_bank4		    ; reserve data anywhere in RAM
 myArray:    ds 0x80
     
 psect input_code, class=CODE
     
 User_Input_Setup:
-	movlw	2
-	movwf	digit_counter	    ; setting the number of digits to be 
-				    ; inputted as 2 
-	
+	Input_1:
 	call	User_Input_1
+	
+	Input_2:
 	call	User_Input_2
+	
 	call	delay_ms
 	
 	movff	input_1, WREG	    ; adding together the two digits to
 				    ; create one 8 bit number
 	addwf	input_2, W
 	movwf	before_dec
+	movlw	before_dec
+	movwf	FSR2
+	movlw	1
+	call	LCD_Clear
+	call	LCD_Write_Message 
 	
 	call	delay_ms
 	call	delay_ms
@@ -52,7 +59,6 @@ User_Input_1:
 	movlw	0xFF
 	cpfslt	input_1		    ; Checks for valid input
 	bra	User_Input_1	    ; repeat if valid button not pressed
-	decf	digit_counter	    ; decrements digit count by 1
 	
 	call	Second_Line	    ; Writes digit to second line of LCD 
 	movlw	input_address_1
@@ -76,12 +82,12 @@ User_Input_2:
 	movlw	0xFF
 	cpfslt	input_2		    ; Checks for valid input 
 	bra	User_Input_2	    ; repeat if valid button not pressed
-	decf	digit_counter	    ; decrements digit counter by 1
 	
 	movlw	input_address_2
 	movwf	FSR2
 	movlw	1
 	call	LCD_Write_Message 
+	clrf	FSR2
 	
 	return 
 
@@ -182,8 +188,7 @@ Decode_9_1:
     movwf   INDF0
     incf    FSR0
     retlw   90
-    
-    
+     
 Decode_Input_2:
     movwf   d2, A
 Error_Check_2:
@@ -267,12 +272,24 @@ Decode_7_2:
 Decode_8_2:
     movlw   0xBD
     cpfseq  d2, A
-    bra	    Decode_9_2
+    bra	    Decode_B_2
     movlw   '8'
     movwf   INDF0
     incf    FSR0
     retlw   8
-
+    
+Decode_B_2:
+    movlw   0x7B
+    cpfseq  d2, A
+    bra	    Decode_9_2
+    call    Shift_Left			; backspace = shift cursor left and 
+					; print a space 
+    movlw   ' '
+    movwf   FSR2
+    movlw   1
+    call   LCD_Write_Message
+    bra    Input_1
+    
 Decode_9_2:
     movlw   0xBB
     cpfseq  d2, A
@@ -281,6 +298,5 @@ Decode_9_2:
     movwf   INDF0
     incf    FSR0
     retlw   9
-    
 
   
