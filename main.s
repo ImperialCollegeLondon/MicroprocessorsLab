@@ -47,7 +47,7 @@ start:
 	call	delay_ms
 	
 	call	User_Input_Setup	  ; Waits for user input 
-					  ; (8-bit/2-digits)
+					  ; (8-bit/2-digits
 	goto	$
 
 	
