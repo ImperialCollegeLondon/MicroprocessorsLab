@@ -27,22 +27,16 @@ User_Input_Setup:
 	Input_2:
 	call	User_Input_2
 	
-	call	delay_ms
-	
+Add_Input:
 	movff	input_1, WREG	    ; adding together the two digits to
 				    ; create one 8 bit number
 	addwf	input_2, W
 	movwf	before_dec
-	movlw	before_dec
-	movwf	FSR2
-	movlw	1
-	call	LCD_Clear
-	call	LCD_Write_Message 
-	
+
 	call	delay_ms
 	call	delay_ms
 	call	delay_ms
-	
+
 	return
 	
 User_Input_1:
@@ -87,7 +81,6 @@ User_Input_2:
 	movwf	FSR2
 	movlw	1
 	call	LCD_Write_Message 
-	clrf	FSR2
 	
 	return 
 
