@@ -1,12 +1,14 @@
 #include <xc.inc>
 
-global	inputangle, delay_ms, input_address_1, input_address_2  
+global	inputangle, delay_ms, input_address_1, input_address_2, sine, cosine
+global	start
 
 extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
-extrn	LCD_Setup, LCD_Write_Message, LCD_Clear, Second_Line
+extrn	LCD_Setup, LCD_Write_Message, LCD_Clear, Second_Line, First_Line
 extrn	Keypad_Setup, Keypad_Read
-extrn	Input_Angle
-extrn	User_Input_Setup
+extrn	Input_Angle, Sine_Msg, Cosine_Msg
+extrn	User_Input_Setup, Press_Clear
+;extrn	cordic_setup
 	
 psect	udata_acs			   ; reserve data space in access ram
 counter:	ds 1			    
@@ -17,6 +19,8 @@ cnt_h:	ds 1				   ; reserve 1 byte for variable cnt_h
     input_address_1	EQU 0xB0
     input_address_2	EQU 0xC0
     inputangle		EQU 0xA0
+    sine		EQU 0xD0
+    cosine		EQU 0xE0
 	
 psect	udata_bank4			   ; reserve data anywhere in RAM
 myArray:    ds 0x80
@@ -30,25 +34,60 @@ setup:	bcf	CFGS			   ; point to Flash program memory
 	bsf	EEPGD			   ; access Flash program memory
 	call	UART_Setup		   ; setup UART
 	call	LCD_Setup		   ; setup LCD
-	call	Keypad_Setup
+	call	Keypad_Setup		   ; setup Keypad
+	;call	cordic_setup		   ; setup CORDIC
 	
-	call	Input_Angle		   ; load message
+	call	Input_Angle		   ; load all messages
+	call	Sine_Msg
+	call	Cosine_Msg
 	
 	goto	start
 	
 	; ******* Main programme ****************************************
 start: 	
-	movlw	inputangle		   ; Writes 'input angle' messge 
-	movwf	FSR2
-	movlw	12
-	call	LCD_Write_Message  
-	call	delay_ms
-	call	delay_ms
-	call	delay_ms
-	
-	call	User_Input_Setup	  ; Waits for user input 
+    movlw	inputangle		   ; Writes 'input angle' message 
+    movwf	FSR2
+    movlw	12			   ; Number of characters in message
+    call	LCD_Write_Message  
+
+    call	delay_ms
+    call	delay_ms
+    call	delay_ms
+
+    call	Second_Line		  ; Move cursor to second line 
+
+    call	User_Input_Setup	  ; Waits for user input 
 					  ; (8-bit/2-digits
-	goto	$
+    call	delay_ms
+    goto	output
+
+output:
+    call    First_Line
+    movlw   sine			  ; Writing sine msg + value to 
+					  ; first line of LCD
+    movwf   FSR2
+    movlw   5				  ; Number of characters in message
+    call    LCD_Write_Message
+    
+    call    delay_ms
+    call    delay_ms
+    call    delay_ms
+    
+    call    Second_Line			  ; Writing Cosine msg + value to 
+					  ; second line of LCD
+    movlw   cosine
+    movwf   FSR2
+    movlw   7				  ; Number of characters in message
+    call    LCD_Write_Message
+    
+    call    delay_ms
+    call    delay_ms
+    call    delay_ms
+    
+    call    Press_Clear			  ; Checks foor C button press
+    call    First_Line			  ; Moves cursor back to start position
+    goto    start			  ; Restarts programme
+    
 
 	
 ;Delay Routines
