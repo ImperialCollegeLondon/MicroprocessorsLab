@@ -1,6 +1,7 @@
 #include <xc.inc>
 
-global  LCD_Setup, LCD_Write_Message, LCD_Clear, Second_Line, Shift_Left, LCD_Send_Byte_D
+global  LCD_Setup, LCD_Write_Message, LCD_Clear, Second_Line
+global	Shift_Left, First_Line
 
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1   ; reserve 1 byte for variable LCD_cnt_l
@@ -48,6 +49,7 @@ LCD_Setup:
 
 LCD_Write_Message:	    ; Message stored at FSR2, length stored in W
 	movwf   LCD_counter, A
+	
 LCD_Loop_message:
 	movf    POSTINC2, W, A
 	call    LCD_Send_Byte_D
@@ -112,13 +114,20 @@ LCD_Clear:
 	return
 	
 Second_Line:
-    movlw   0011000000B		    ; Points to bottom row of LCD screen 
+    movlw   0011000000B		    ; Points cursor to bottom row of LCD screen 
     call    LCD_Send_Byte_I
     movwf   10
     call    LCD_delay_ms
     return
     
-Shift_Left:
+First_Line:			    ; Points cursor to the top row of LCD 
+    movlw   00110000B
+    call    LCD_Send_Byte_I
+    movwf   10
+    call    LCD_delay_ms
+    return 
+    
+Shift_Left:			    ; Moves cursor one space to the left 
     movlw   0x10
     call    LCD_Send_Byte_I
     movwf   10
