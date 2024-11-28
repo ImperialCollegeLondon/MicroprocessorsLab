@@ -1,9 +1,12 @@
-RS	EQU PORTB, 2 ;port B is control line
-RW	EQU PORTB, 3
-EN	EQU PORTB, 4
-CS1	EQU PORTB, 0
-CS2	EQU PORTB, 1
-RST	EQU PORTB, 5
+#include <xc.inc>
+
+    
+RS	EQU	2 ;port B is control line
+R	EQU	3 ;RW
+EN	EQU	4
+CS1	EQU	0
+CS2	EQU	1
+RST	EQU	5
 
 init_LCD:
 	bsf	PORTB, RST ;reset
@@ -19,10 +22,16 @@ init_LCD:
 	call	send_command
 	movlw	0x3F ;display on
 	call	send_command
+	return
 
+draw_pattern:
+	movlw	0xAA
+	call	send_data
+	return
+	
 send_command: ;RS and R/W are both 0 when sending command
 	bcf	PORTB, RS ;clear
-	bcf	PORTB, RW ; clear RW
+	bcf	PORTB, R ; clear RW
 	movwf	PORTD ;store command in w, move command to port D where port D is data line
 	bsf	PORTB, EN; set Enable pin to 1
 	call	delay
@@ -31,17 +40,18 @@ send_command: ;RS and R/W are both 0 when sending command
 	
 send_data: ;when writing/sending data, RS pin is set to 1
 	bsf	PORTB, RS
-	bcf	PORTB, RW
+	bcf	PORTB, R
 	movwf	PORTD ;place data on port D
 	bsf	PORTB, EN; set Enable pin to 1
 	call	delay
 	bcf	PORTB, EN
 	return
 
+delay:
+	decfsz	0x20, F, A    ; Decrement until zero
+	bra	delay
+	return
 
-	
- 
-	
 	
 
 

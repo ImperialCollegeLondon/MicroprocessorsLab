@@ -4,9 +4,9 @@
 ;AN0RES      res     2       ; Variable to store ADC result (16-bit)
 ;Temperature res     2       ; Temperature result in float (approximate in integer)
 ;Voltage     res     2       ; Voltage result in float (approximate in integer)
-psect	udata_acs
-GLCD_cnt_ms:	    ds 1
-GLCD_tmp:	    ds 1
+;psect	udata_acs
+;;GLCD_cnt_ms:	    ds 1
+;GLCD_tmp:	    ds 1
     
 ; GLCD Control Pins (Assuming connected to PORTB or PORTD)
 ; You can configure these depending on your wiring
