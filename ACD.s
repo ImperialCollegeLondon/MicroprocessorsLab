@@ -17,7 +17,7 @@ NRES3:	  ds 1    ; reserve 4 bytes
 psect	adc_code, class=CODE
     
 ADC_Setup:
-	bsf	TRISA, PORTA_RA0_POSN, A  ; pin RA0==AN0 input
+	bsf	TRISA, PORTA_RA3_POSN, A  ; pin RA0==AN0 input
 	movlb	0x0f
 	bsf	ANSEL0	    ; set AN0 to analog
 	movlb	0x00
@@ -28,7 +28,7 @@ ADC_Setup:
 	movlw   0xF6	    ; Right justified output
 	movwf   ADCON2, A   ; Fosc/64 clock and acquisition times
 	return
-
+	
 multiplication:
 	movlw	0x418A
 	andlw	0xFF
@@ -92,8 +92,6 @@ mul24and8:
 	movff   NRES2, RES2
 	movff   NRES3, RES3
 	return
-	
-	
 	
 	
 ADC_Read:

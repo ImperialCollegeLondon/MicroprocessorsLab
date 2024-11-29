@@ -8,6 +8,10 @@ extrn	ADC_Setup, ADC_Read, multiplication, mul24and8, RES3, RES0, RES1, RES2,  A
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
 delay_count:ds 1    ; reserve one byte for counter in the delay routine
+dot:	    ds 1   
+degree:	    ds 1
+celcius:    ds 1
+    
     
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
 myArray:    ds 0x80 ; reserve 128 bytes for message data
@@ -74,20 +78,25 @@ measure_loop:
 	movlw	0x30
 	addwf	RES3, F, A
 	movff	RES3, myArray + 2
+	movlw	0x2E
+	movwf	dot
+	movff	dot, myArray + 3
 	call	mul24and8
 	movlw	0x30
 	addwf	RES3, F, A
-	movff	RES3, myArray + 3
-	movlw	4
+	movff	RES3, myArray + 4
+	movlw	5
 	lfsr	2, myArray
 	call	LCD_Write_Message
+	
+	
 	
 	;movf	RES0, W, A
 	;call	LCD_Write_Hex
 	;movf	ADRESL, W, A
 	;call	LCD_Write_Hex
 	goto	measure_loop		; goto current line in code
-	
+
     
 	; a delay subroutine if you need one, times around loop in delay_count
 delay:	decfsz	delay_count, A	; decrement until zero
