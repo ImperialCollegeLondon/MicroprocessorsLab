@@ -17,7 +17,7 @@ NRES3:	  ds 1    ; reserve 4 bytes
 psect	adc_code, class=CODE
     
 ADC_Setup:
-	bsf	TRISA, PORTA_RA3_POSN, A  ; pin RA0==AN0 input
+	bsf	TRISA, PORTA_RA0_POSN, A  ; pin RA0==AN0 input
 	movlb	0x0f
 	bsf	ANSEL0	    ; set AN0 to analog
 	movlb	0x00

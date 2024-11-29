@@ -15,10 +15,10 @@
       <itemPath>main.s</itemPath>
       <itemPath>config.s</itemPath>
       <itemPath>ACD.s</itemPath>
-      <itemPath>LCD.s</itemPath>
-      <itemPath>UART.s</itemPath>
       <itemPath>GLCD.s</itemPath>
       <itemPath>GLCD_2.s</itemPath>
+      <itemPath>LCD.s</itemPath>
+      <itemPath>UART.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
