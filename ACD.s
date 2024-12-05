@@ -18,14 +18,14 @@ psect	adc_code, class=CODE
     
 ADC_Setup:
 	bsf	TRISA, PORTA_RA3_POSN, A  ; pin RA3==AN3 input
-	movlb	0x0f
-	bsf	ANSEL0	    ; set ANSEL0 to analog channel
+	movlb	0x0F
+	bsf	ANSEL3	    ; set ANSEL0 to analog channel
 	movlb	0x00
-	movlw   0x0F	    ; select AN3 for measurement
+	movlw   00001101B	    ; select AN3 for measurement
 	movwf   ADCON0, A   ; and turn ADC on
-	movlw   0x34	    ; Select 4.096V positive reference
+	movlw   00110000B	    ; Select 4.096V positive reference
 	movwf   ADCON1,	A   ; 0V for -ve reference and -ve input
-	movlw   0xF6	    ; Right justified output
+	movlw   1110110B	    ; Right justified output
 	movwf   ADCON2, A   ; Fosc/64 clock and acquisition times
 	return
 	

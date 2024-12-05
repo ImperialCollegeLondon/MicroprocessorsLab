@@ -3,7 +3,7 @@
 extrn	UART_Setup, UART_Transmit_Message  ; external uart subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Send_Byte_D, first_line	 ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read, multiplication, mul24and8, RES3, RES0, RES1, RES2,  ARG2H, ARG2L, NRES0, NRES1, NRES2, NRES3	   ; external ADC subroutines
-extrn	RTCC_Setup, RTCC_Get_Seconds, RTCC_seconds, RTCC_minutes, RTCC_secondsL, RTCC_secondsH, ascii_low, ascii_high
+extrn	RTCC_Setup, RTCC_Get_Seconds, RTCC_seconds
     
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -39,6 +39,8 @@ setup:	bcf	CFGS	; point to Flash program memory
 	call	LCD_Setup	; setup UART
 	call	ADC_Setup	; setup ADC
 	call	RTCC_Setup
+	clrf	TRISE, A
+	clrf	LATE, A
 	goto	measure_loop
 	
 	; ******* Main programme ****************************************
@@ -82,29 +84,44 @@ measure_loop:
 	movlw	0x30
 	addwf	RES3, F, A
 	movff	RES3, myArray + 2
-	movlw	0x2E
-	movwf	dot, A
-	movff	dot, myArray + 3
+	;movlw	0x2E
+	;movwf	dot, A
+	;movff	dot, myArray + 3
 	call	mul24and8
 	movlw	0x30
 	addwf	RES3, F, A
-	movff	RES3, myArray + 4
+	movff	RES3, myArray + 3
 	
 
 	;movlw	0x30
 	;addwf	RTCC_secondsL,F, A	
-	movff	ascii_high, myArray + 5
+	;movff	ascii_high, myArray + 5
 	;
 	;movlw	0x30
-	movff	ascii_low, myArray + 6
+	;movff	ascii_low, myArray + 6
 	;movlw	5
 	;lfsr	2, myArray
 	;call	LCD_Write_Message
 	
-	movlw	7
+	movlw	4
 	lfsr	2, myArray
 	call	UART_Transmit_Message
-	goto	$
+
+loop_clock_read:
+	call	RTCC_Setup
+	nop
+	nop
+	call	RTCC_Get_Seconds
+	nop
+	nop
+	;call	LCD_Send_Byte_D	    ; returns seconds value in W
+	movf	RTCC_seconds, W
+	nop
+	nop
+	movwf	PORTE, A
+	nop
+	nop			    ; write value out to PORTD
+	goto	loop_clock_read	    ; goto loop_clock_read
 	
 	
 	
