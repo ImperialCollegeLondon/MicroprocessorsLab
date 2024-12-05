@@ -1,9 +1,9 @@
 #include <xc.inc>
 
 extrn	UART_Setup, UART_Transmit_Message  ; external uart subroutines
-extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Send_Byte_D	 ; external LCD subroutines
+extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Send_Byte_D, first_line	 ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read, multiplication, mul24and8, RES3, RES0, RES1, RES2,  ARG2H, ARG2L, NRES0, NRES1, NRES2, NRES3	   ; external ADC subroutines
-
+extrn	RTCC_Setup, RTCC_Get_Seconds, RTCC_seconds, RTCC_minutes
     
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -35,7 +35,7 @@ setup:	bcf	CFGS	; point to Flash program memory
 	call	UART_Setup	; setup UART
 	call	LCD_Setup	; setup UART
 	call	ADC_Setup	; setup ADC
-	
+	call	RTCC_Setup
 	goto	measure_loop
 	
 	; ******* Main programme ****************************************
@@ -64,8 +64,9 @@ loop: 	;tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	;call	LCD_Write_Message
 	
 measure_loop:
-    
+	call	first_line
 	call	ADC_Read
+	call	RTCC_Get_Seconds
 	call    multiplication
 	movlw	0x30
 	addwf	RES3, F, A
@@ -85,9 +86,14 @@ measure_loop:
 	movlw	0x30
 	addwf	RES3, F, A
 	movff	RES3, myArray + 4
+	;movlw	5
+	;lfsr	2, myArray
+	;call	LCD_Write_Message
+	
 	movlw	5
 	lfsr	2, myArray
-	call	LCD_Write_Message
+	call	UART_Transmit_Message
+	goto	$
 	
 	
 	
