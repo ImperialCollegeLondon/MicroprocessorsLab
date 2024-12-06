@@ -101,7 +101,7 @@ measure_loop:
 	;movff	ascii_low, myArray + 6
 	movlw	3
 	lfsr	2, myArray
-	;call	LCD_Write_Message
+	call	LCD_Write_Message
 	call	UART_Transmit_Message
 	
 	;movlw	4 ;save length as 4
