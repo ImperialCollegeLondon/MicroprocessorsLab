@@ -73,24 +73,24 @@ measure_loop:
 	call	ADC_Read
 	call	RTCC_Get_Seconds
 	call    multiplication
+	;movlw	0x30
+	;addwf	RES3, F, A
+	;movff	RES3, myArray
+	call	mul24and8
 	movlw	0x30
 	addwf	RES3, F, A
-	movff	RES3, myArray
+	movff	RES3, myArray 
 	call	mul24and8
 	movlw	0x30
 	addwf	RES3, F, A
 	movff	RES3, myArray + 1
-	call	mul24and8
-	movlw	0x30
-	addwf	RES3, F, A
-	movff	RES3, myArray + 2
 	;movlw	0x2E
 	;movwf	dot, A
 	;movff	dot, myArray + 3
 	call	mul24and8
 	movlw	0x30
 	addwf	RES3, F, A
-	movff	RES3, myArray + 3
+	movff	RES3, myArray + 2
 	
 
 	;movlw	0x30
@@ -99,13 +99,16 @@ measure_loop:
 	;
 	;movlw	0x30
 	;movff	ascii_low, myArray + 6
-	;movlw	5
-	;lfsr	2, myArray
-	;call	LCD_Write_Message
-	
-	movlw	4
+	movlw	3
 	lfsr	2, myArray
-	call	UART_Transmit_Message
+	call	LCD_Write_Message
+	
+	;movlw	4 ;save length as 4
+	;lfsr	2, myArray
+	movlw	0xFF
+	movwf	delay_count, A
+	call	delay
+	goto	measure_loop
 
 loop_clock_read:
 	call	RTCC_Setup
@@ -123,15 +126,6 @@ loop_clock_read:
 	nop			    ; write value out to PORTD
 	goto	loop_clock_read	    ; goto loop_clock_read
 	
-	
-	
-	;movf	RES0, W, A
-	;call	LCD_Write_Hex
-	;movf	ADRESL, W, A
-	;call	LCD_Write_Hex
-	;goto	measure_loop		; goto current line in code
-
-    
 	; a delay subroutine if you need one, times around loop in delay_count
 delay:	decfsz	delay_count, A	; decrement until zero
 	bra	delay

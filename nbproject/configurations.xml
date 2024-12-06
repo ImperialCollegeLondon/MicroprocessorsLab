@@ -16,8 +16,8 @@
       <itemPath>config.s</itemPath>
       <itemPath>LCD.s</itemPath>
       <itemPath>UART.s</itemPath>
-      <itemPath>ACD.s</itemPath>
       <itemPath>RTCC.s</itemPath>
+      <itemPath>ACD.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -1155,8 +1155,6 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-1ffff"/>
         <property key="poweroptions.powerenable" value="false"/>
-        <property key="programmerToGoFilePath"
-                  value="C:/Users/yyc22/OneDrive - Imperial College London/MicroprocessorsLab/debug/default/default_ptg"/>
         <property key="programmerToGoImageName" value="default_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
