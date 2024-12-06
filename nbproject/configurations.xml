@@ -14,10 +14,10 @@
                    projectFiles="true">
       <itemPath>main.s</itemPath>
       <itemPath>config.s</itemPath>
-      <itemPath>LCD.s</itemPath>
-      <itemPath>UART.s</itemPath>
       <itemPath>RTCC.s</itemPath>
+      <itemPath>UART.s</itemPath>
       <itemPath>ACD.s</itemPath>
+      <itemPath>LCD.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
