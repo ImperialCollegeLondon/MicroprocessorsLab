@@ -6,24 +6,24 @@ RTCC_seconds: ds    1	    ; reserve 1 byte for variable UART_counter
 
 psect	rtcc_code,class=CODE
     
-START_SOSC:
-    bsf	    OSCCON2,3
-    
-WAIT_SOSC_STABLE:
-    btfss   OSCCON2,6
-    goto    WAIT_SOSC_STABLE
-    
     
 RTCC_Setup:
     banksel RTCCFG	; RTCC SFRs are not in access ram
-    bcf	    RTSECSEL1	; RTSECSELx bits determine output on RTCC pin
-    bsf	    RTSECSEL0	; 10 outputs the source clock, 01 outputs second count
-    bsf	    RTCCFG,7
-    bsf	    RTCCFG, 2
-    movlw   0x84	; Enable RTCC, turn on RTCC output pin      
-    movwf   RTCCFG, B
- 
-    
+    ;bcf	    GIE ;clear global interrupt
+    movlw   0x55    ;first unlock key
+    movwf   EECON2
+    movlw   0xAA
+    movwf   EECON2
+    bsf	    RTCCFG, 5, B
+    bsf	    RTCCFG, 7, B
+    ;bcf	    RTCCFG, 5, B
+    ;bsf	    GIE
+    bsf	    RTSECSEL1	; RTSECSELx bits determine output on RTCC pin
+    bcf	    RTSECSEL0	; 10 outputs the source clock, 01 outputs second count
+    ;bsf	    RTCCFG, 7, B
+    bsf	    RTCCFG, 2, B
+   ; movlw   0x84	; Enable RTCC, turn on RTCC output pin      
+    ;movwf   RTCCFG, B
     movlb   0		; reset BSR to 0
     return
 
