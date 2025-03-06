@@ -1,4 +1,3 @@
-CONFIG  XINST = OFF           ; Extended Instruction Set (Disabled)
 #include <xc.inc>
 
 extrn LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Send_Byte_I, LCD_delay_ms, LCD_Send_Byte_D
@@ -22,7 +21,8 @@ PlaintextTable:
 	align	2
     
 CiphertextTable:
-	db	'a','a','a', 'a','a','a','a','a','a'
+	db	'b','a','a', 'a','a','a','a','a','a'
+	TableLength   EQU	9
 	align	2
 	
 	; ******* Programme FLASH read Setup Code ***********************
@@ -39,14 +39,16 @@ start:
 	call	setup_plaintext		; our counter register
 	call	print_message
 	
-	movlw	0x4F
+	movlw	0xFF
 	call	LCD_delay_ms
 	
 	call    modify_table     
 	call	setup_ciphertext
     	call	print_message
 	
-	movlw	0x4F
+	movlw	0xFF
+	call	LCD_delay_ms
+	movlw	0xFF
 	call	LCD_delay_ms
 	
 	goto	ending
@@ -76,18 +78,12 @@ setup_ciphertext:
 	return
 		
 print_message: 	
-    	movlw	0x01
-	movwf	PORTH, A
-	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
-	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
+	tblrd*+			
+	movff	TABLAT, POSTINC0
 	movf	TABLAT, W, A
-
 	call	LCD_Send_Byte_D
-	movlw	0x00
-	movwf	PORTH, A
-	decfsz	counter_pt, A		; count down to zero
-	bra	print_message	; keep going until finished
-	
+	decfsz	counter_pt, A
+	bra	print_message
 	movlw	0xC0
 	call LCD_Send_Byte_I
 	return
@@ -117,10 +113,10 @@ modify_table:
 modify_loop:
     tblrd*+              
     movff   TABLAT, POSTINC0
-    movf    POSTINC0, W    
-    movwf   TABLAT         
+    movf    POSTINC0, W, A    
+    movf    TABLAT, W, A         
     tblwt*+                
-    decfsz counter_ec, f   ; Decrement modification counter
+    decfsz counter_ec, f, A   ; Decrement modification counter
     bra modify_loop         ; Continue loop if not done
 
     return
