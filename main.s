@@ -20,10 +20,15 @@ PlaintextTable:
 					
 	TableLength   EQU	9	
 	align	2
-    
+
+
 CiphertextTable:
 	db	'a','a','a', 'a','a','a','a','a','a'
 	align	2
+	
+psect	code, abs
+rst:	org 0x0
+	goto setup
 	
 	; ******* Programme FLASH read Setup Code ***********************
 setup:	bcf	CFGS	; point to Flash program memory  
@@ -92,42 +97,31 @@ print_message:
 	call LCD_Send_Byte_I
 	return
 	
-;modify_table:
-;	movf CiphertextArray, W, A
-;	movwf next_address, A
-;	call setup_plaintext
-;	
-;	goto modify_loop
-   
-;modify_loop:
-;	
-;	tblrd*+			    ; one byte from PM to TABLAT, increment TBLPRT
-;	movff	TABLAT, POSTINC0    ; move data from TABLAT to (FSR0), inc FSR0	
-;	movf	TABLAT, W, A
-;	movwf	next_address, A
-;	incf	next_address, A
-;	decfsz	counter_pt, A
-;	bra modify_loop
-;	
-;	return
-	
 modify_table:
-    call setup_ciphertext
-
+	movf CiphertextArray, W, A
+	movwf next_address, A
+	call setup_plaintext
+	goto modify_loop
+   
 modify_loop:
-    tblrd*+              
-    movff   TABLAT, POSTINC0
-    movf    POSTINC0, W    
-    movwf   TABLAT         
-    tblwt*+                
-    decfsz counter_ec, f   ; Decrement modification counter
-    bra modify_loop         ; Continue loop if not done
+		
+	tblrd*+			    ; one byte from PM to TABLAT, increment TBLPRT
+	movff	TABLAT, POSTINC0    ; move data from TABLAT to (FSR0), inc FSR0	
+	movf	TABLAT, W, A
+	movwf	next_address, A
+	incf	next_address, A
+	decfsz	counter_pt, A
+	bra modify_loop	
+	return
+	
 
     return
 
 
 ending:
     nop
-end
+    goto $
+    
+    end rst
     
 	

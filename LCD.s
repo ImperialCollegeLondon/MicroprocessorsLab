@@ -9,7 +9,7 @@ LCD_cnt_ms:	ds 1	; reserve 1 byte for ms counter
 LCD_tmp:	ds 1	; reserve 1 byte for temporary use
 LCD_counter:	ds 1	; reserve 1 byte for counting through nessage
 
-PSECT	udata_acs_ovr,space=1,ovrld,class=COMRAM
+psect	udata_acs_ovr,space=1,ovrld,class=COMRAM
 LCD_hex_tmp:	ds 1    ; reserve 1 byte for variable LCD_hex_tmp
 
 	LCD_E	EQU 5	; LCD enable bit
@@ -152,8 +152,3 @@ lcdlp1:	decf 	LCD_cnt_l, F, A	; no carry when 0x00 -> 0xff
 	return			; carry reset so return
 
 end
-
-
-
-
-
