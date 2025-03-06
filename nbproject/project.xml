@@ -3,7 +3,7 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>Simple1</name>
+            <name>EncryptionProject</name>
             <creation-uuid>365f4bb0-f88d-4b90-a2ad-2bf533a59236</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions/>
