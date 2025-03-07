@@ -25,9 +25,14 @@ modify_loop:
     movf    counter_ec, W, A     ; Check if counter is zero
     bz      modify_done          ; If zero, we are done
 
-    movf    INDF1, W, A          ; Read character from PlaintextArray
+    movf    INDF1, W, A          ; Read character from PlaintextArray into w
+    
+    
+    addlw   0x02		 ; CAESAR CIPHER!
+    
+    ; call encoding alorithm here!
+    
     movwf   INDF0, A             ; Write character to CiphertextArray
-
     incf    FSR1L, A             ; Increment FSR1 (next character in PlaintextArray)
     incf    FSR0L, A             ; Increment FSR0 (next character in CiphertextArray)
 

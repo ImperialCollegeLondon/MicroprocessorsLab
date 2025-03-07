@@ -37,13 +37,9 @@ setup:	bcf	CFGS	; point to Flash program memory
 	goto	start
 
 start:
-    
-	movlw	0xFF
-	call	LCD_delay_ms
-	call	LCD_delay_ms
+
 
 	call	copy_plaintext		; load code into RAM
-	
 	call	print_plaintext		; print the plaintext
 	
 	movlw   0xC0        ; Move the cursor to the second line (or wherever needed)
@@ -51,18 +47,9 @@ start:
 	movlw	0x01	    ; allow time for cursor to move
 	call	LCD_delay_ms
 	
-	movlw	0xFF
-	call	LCD_delay_ms
-	call	LCD_delay_ms
-	
 	call modify_table        ; Modify the ciphertext array
-	call print_ciphertext    ; Print the modified data to the LCD
 	
-	movlw	0xFF
-	call	LCD_delay_ms
-	call	LCD_delay_ms
-	call	LCD_delay_ms
-	call	LCD_delay_ms
+	call print_ciphertext    ; Print the modified data to the LCD
 	
 	goto	$
 
