@@ -27,9 +27,7 @@ modify_loop:
 
     movf    INDF1, W, A          ; Read character from PlaintextArray into w
     
-    
-    addlw   0x02		 ; CAESAR CIPHER!
-    
+    addlw   0x15		 ; CAESAR CIPHER!
     ; call encoding alorithm here!
     
     movwf   INDF0, A             ; Write character to CiphertextArray
