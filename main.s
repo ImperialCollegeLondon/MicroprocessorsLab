@@ -1,8 +1,8 @@
 
 #include <xc.inc>
-global CiphertextArray, PlaintextArray, TableLength, counter_pt, counter_ec, timer_low, timer_high
+global CiphertextArray, PlaintextArray, TableLength, counter_pt, counter_ec, timer_low, timer_high, PlaintextTable
 extrn LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Send_Byte_I, LCD_delay_ms, LCD_Send_Byte_D
-extrn print_plaintext, print_ciphertext,  send_characters
+extrn print_plaintext, print_ciphertext,  send_characters, copy_plaintext
 extrn modify_table
 extrn measure_modify_table
 
@@ -32,37 +32,26 @@ rst:	org 0x0
 setup:	bcf	CFGS		; point to Flash program memory  
 	bsf	EEPGD		; access Flash program memory
 	call	LCD_Setup	; setup LCD
-	movlw	0x00
-	movwf	TRISH, A	; setup clock pin output
-	movwf	TRISD, A	; set up message output
-	movlw	0x00
-	movwf	PORTH, A
+	call	encode_setup
 	goto	start
 
 start:
 	call encoding_func
-	;goto	$
-
-copy_plaintext:
-	lfsr	0, PlaintextArray	; Load FSR0 with address in RAM	
-	movlw	low highword(PlaintextTable)	; address of data in PM
-	movwf	TBLPTRU, A		; load upper bits to TBLPTRU
-	movlw	high(PlaintextTable)	; address of data in PM
-	movwf	TBLPTRH, A		; load high byte to TBLPTRH
-	movlw	low(PlaintextTable)	; address of data in PM
-	movwf	TBLPTRL, A		; load low byte to TBLPTRL
-	movlw	TableLength	; bytes to read
-	movwf 	counter_pt, A
-	goto setup_loop
-
-setup_loop:
-	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
-	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
-	movf	TABLAT, W, A
-	decfsz	counter_pt, A		; count down to zero
-	bra	setup_loop	; keep going until finished
+	goto	$
+	
+encode_setup:
+    	movlw	0x00
+	movwf	TRISH, A	; setup clock pin output
+	movwf	TRISD, A	; set up message output
+	movlw	0x00
+	movwf	PORTH, A
 	return
-
+	
+decode_setup:
+	movlw	0xFF
+	movwf	TRISH, A	; setup clock pin input
+	movwf	TRISD, A	; set up message input
+	
 encoding_func:
 	call	copy_plaintext		; load code into RAM
 	call	print_plaintext		; print the plaintext

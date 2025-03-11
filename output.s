@@ -1,7 +1,7 @@
 #include <xc.inc>
 
 extrn CiphertextArray, PlaintextArray, TableLength, counter_pt, LCD_Send_Byte_D
-global print_plaintext, print_ciphertext, send_characters
+global print_plaintext, print_ciphertext, send_characters, copy_plaintext, PlaintextTable
     
 psect	print_code,class=CODE
 
@@ -57,4 +57,23 @@ send_loop:
     bra     send_loop      ; Loop until all characters are printed
     return
 
+copy_plaintext:
+	lfsr	0, PlaintextArray	; Load FSR0 with address in RAM	
+	movlw	low highword(PlaintextTable)	; address of data in PM
+	movwf	TBLPTRU, A		; load upper bits to TBLPTRU
+	movlw	high(PlaintextTable)	; address of data in PM
+	movwf	TBLPTRH, A		; load high byte to TBLPTRH
+	movlw	low(PlaintextTable)	; address of data in PM
+	movwf	TBLPTRL, A		; load low byte to TBLPTRL
+	movlw	TableLength	; bytes to read
+	movwf 	counter_pt, A
+	goto setup_loop
+	
+setup_loop:
+	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
+	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
+	movf	TABLAT, W, A
+	decfsz	counter_pt, A		; count down to zero
+	bra	setup_loop	; keep going until finished
+	return
 
