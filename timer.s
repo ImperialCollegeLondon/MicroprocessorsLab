@@ -1,7 +1,7 @@
 #include <xc.inc>
     
 global measure_modify_table
-extrn modify_table, timer_low, timer_high
+extrn modify_table, timer_low, timer_high 
 
 psect	timer_code,class=CODE
 measure_modify_table:

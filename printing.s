@@ -29,7 +29,6 @@ print_plaintext:
    
 print_loop:
     movf    counter_pt, W, A  
-    bz      print_done      ; If counter is zero, we're done
 
     movf    INDF0, W, A    ; Read a character from PlaintextArray
     call    LCD_Send_Byte_D ; Send it to the LCD
@@ -37,7 +36,4 @@ print_loop:
     incf    FSR0L, A       ; Move to the next character in PlaintextArray
     decfsz  counter_pt, A  
     bra     print_loop      ; Loop until all characters are printed
-    goto    print_done
-
-print_done:
     return
