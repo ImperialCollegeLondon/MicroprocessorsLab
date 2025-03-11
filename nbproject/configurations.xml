@@ -15,10 +15,9 @@
       <itemPath>main.s</itemPath>
       <itemPath>config.s</itemPath>
       <itemPath>LCD.s</itemPath>
-      <itemPath>printing.s</itemPath>
       <itemPath>make_ciphertext.s</itemPath>
       <itemPath>timer.s</itemPath>
-      <itemPath>send_message.s</itemPath>
+      <itemPath>sending.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

@@ -2,11 +2,10 @@
 #include <xc.inc>
 global CiphertextArray, PlaintextArray, TableLength, counter_pt, counter_ec, timer_low, timer_high
 extrn LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Send_Byte_I, LCD_delay_ms, LCD_Send_Byte_D
-extrn print_plaintext, print_ciphertext   
+extrn print_plaintext, print_ciphertext,  send_characters
 extrn modify_table
 extrn measure_modify_table
-extrn send_characters
-    
+
 psect	udata_acs		; reserve data space in access ram
 counter_pt:	ds 1		; counter for printing the initial data
 counter_ec:	ds 1		; encoding counter
