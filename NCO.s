@@ -1,13 +1,63 @@
-    #include <xc.inc>
+#include <xc.inc>
 
+global	init_phase_accum, init_timer, int_service, phase_jump
+    
 ;===================================DATA====================================
-
-psect	udata_acs   ; reserve space in access ram
+psect	udata_acs   ; Reserve space in access RAM
+wave_out:	ds  1
 phase_jump:	ds  1
 phase_accum:	ds  2
 
-psect	data	    ; reserve space
-lookup:		    ; currently a sine wave
+;===================================CODE====================================
+psect	nco_code, CLASS = code
+
+;===================================INIT====================================
+init_phase_accum:
+    clrf    phase_accum,   A
+    clrf    phase_accum+1, A
+    return
+
+init_timer:
+    clrf    T1CON,  A
+    movlw   10001000B    ; Set timer1 to 16-bit, Fosc/4
+    movwf   T1CON,  A    ; = 16MHz clock rate, approx 4ms rollover
+    bsf	    TMR1IE       ; Enable Timer1 interrupt
+    bsf     GIE          ; Enable global interrupts
+    return
+
+;===================================ISR====================================
+int_service:
+    bcf     TMR1IF         ; Clear Timer1 interrupt flag
+    call    update_phase   ; Increment phase accumulator
+    call    output_waveform ; Fetch sample and send to DAC
+    retfie
+
+;=============================MODULAR ROUTINES=============================
+update_phase:
+    movf    phase_jump, W,  A
+    addwf   phase_accum, F, A
+    btfsc   STATUS, 0, A
+    incf    phase_accum+1, F, A
+    return
+
+output_waveform:
+    movf    phase_accum+1, W, A  ; Use upper byte for lookup
+
+    movwf   TBLPTRL, A		   ; Load it into the table pointer
+    movlw   HIGH lookup            ; Set upper address of table
+    movwf   TBLPTRH, A
+    movlw   0x00
+    movwf   TBLPTRU, A              ; Ensure upper byte is 0
+
+    tblrd*                         ; Read value from table into TABLAT
+    movf    TABLAT, W, A            ; Move read value to WREG
+    movwf   wave_out, A             ; Store waveform output
+    movwf   PORTC, A                ; Output to DAC (or LED test)
+    return
+
+;==============================LOOKUP TABLE================================
+psect	data	    ; Reserve space
+lookup:		    ; 256-entry sine wave lookup table
    db	0x80, 0x83, 0x86, 0x89, 0x8c, 0x8f, 0x92, 0x95
    db	0x98, 0x9c, 0x9f, 0xa2, 0xa5, 0xa8, 0xab, 0xae
    db	0xb0, 0xb3, 0xb6, 0xb9, 0xbc, 0xbf, 0xc1, 0xc4
@@ -42,37 +92,3 @@ lookup:		    ; currently a sine wave
    db	0x6a, 0x6d, 0x70, 0x73, 0x76, 0x79, 0x7c
    lookup_length    EQU 0x100
    align	    2
-
-;===================================INIT====================================
-nco_setup:
-clock_setup:
-    clrf    T1CON,  A
-    movlw   10001000B	; Set timer0 to 16-bit, Fosc/4
-    movwf   T1CON,  A	; = 16MHz clock rate, approx 4ms rollover
-    bsf	    TMR1IE	; Enable timer1 interrupt
-    bsf     GIE		   ; Enable global interrupts
-
-lookup_setup:
-    ; Initialize phase accumulator
-    clrf    phase_accum,   A
-    clrf    phase_accum+1, A
-
-main_loop:
-    goto    main_loop    ; Infinite loop, processing happens in ISR
-
-;===================================ISR====================================
-interrupt_service:
-    bcf     TMR1IF ; Clear Timer1 interrupt flag
-
-    ; Increment phase accumulator
-    movf    phase_jump, W,  A
-    addwf   phase_accum, F, A
-    ;btfsc   STATUS, C
-    incf    phase_accum+1, F,	A
-
-    ; Use upper 8 bits of phase_accum for lookup
-    movf    phase_accum+1, W,	A
-    call    lookup
-    movwf   PORTC,  A ; Output waveform to DAC
-
-    retfie
