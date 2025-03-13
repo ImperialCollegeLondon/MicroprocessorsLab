@@ -1,17 +1,30 @@
-	#include <xc.inc>
+#include <xc.inc>
 
-extrn	init_phase_accum, init_timer, int_service, phase_jump
+extrn	init_phase_accum, init_timer, update_phase, output_waveform, phase_jump
 	
 ;===================================MAIN====================================
 psect	code, abs
-main:
-    org	0x0
-    goto init
+org 0x0000
+    goto main      ; Ensure proper startup handling
 
-init:
+org 0x0008
+    goto int_service   ; Define interrupt vector
+
+main:
     call    init_phase_accum
     call    init_timer
-    call    main_loop
+    bsf     INTCON, 7,	A   ; Bit 7 in INTCON is GIE
+    goto    $
+;===================================ISR====================================
+int_service:
+    btfsc  PIR1, 0, A	    ; Bit 0 of PIR1 is TMR1IF
+    goto   handle_timer1
+    retfie		    ; Return if it wasn?t Timer1
 
-main_loop:
-    goto    main_loop    ; Infinite loop, processing happens in ISR
+handle_timer1:
+    bcf    PIR1, 0, A	    ; Clear Timer1 interrupt flag
+    call   update_phase
+    call   output_waveform
+    retfie
+
+    end main

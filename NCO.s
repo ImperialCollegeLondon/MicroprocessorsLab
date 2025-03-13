@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-global	init_phase_accum, init_timer, int_service, phase_jump
+global	init_phase_accum, init_timer, update_phase, output_waveform, phase_jump
     
 ;===================================DATA====================================
 psect	udata_acs   ; Reserve space in access RAM
@@ -10,27 +10,23 @@ phase_accum:	ds  2
 
 ;===================================CODE====================================
 psect	nco_code, CLASS = code
-
 ;===================================INIT====================================
 init_phase_accum:
     clrf    phase_accum,   A
     clrf    phase_accum+1, A
+    movlw   0x01
+    movwf   phase_jump,	   A
     return
 
 init_timer:
-    clrf    T1CON,  A
-    movlw   10001000B    ; Set timer1 to 16-bit, Fosc/4
-    movwf   T1CON,  A    ; = 16MHz clock rate, approx 4ms rollover
-    bsf	    TMR1IE       ; Enable Timer1 interrupt
-    bsf     GIE          ; Enable global interrupts
+    clrf    T1CON, A
+    clrf    TMR1H, A
+    clrf    TMR1L, A
+    bcf     PIR1,  0,	A       ; Bit 0 of PIR1 is TMR1IF
+    movlw   10001000B
+    movwf   T1CON, A		; Enable Timer1
+    bsf     PIE1,  0,	A       ; Bit 0 of PIE1 is TMR1IE
     return
-
-;===================================ISR====================================
-int_service:
-    bcf     TMR1IF         ; Clear Timer1 interrupt flag
-    call    update_phase   ; Increment phase accumulator
-    call    output_waveform ; Fetch sample and send to DAC
-    retfie
 
 ;=============================MODULAR ROUTINES=============================
 update_phase:
