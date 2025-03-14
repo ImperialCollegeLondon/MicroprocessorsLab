@@ -23,7 +23,7 @@
   CONFIG  BORPWR = ZPBORMV      ; BORMV Power level (ZPBORMV instead of BORMV is selected)
 
 ; CONFIG2H
-  CONFIG  WDTEN = OFF		; Watchdog Timer (WDT disabled in hardware and software)
+  CONFIG  WDTEN = OFF	        ; Watchdog Timer (WDT enabled in hardware; SWDTEN bit disabled)
   CONFIG  WDTPS = 1048576       ; Watchdog Postscaler (1:1048576)
 
 ; CONFIG3L
@@ -36,7 +36,7 @@
 ; CONFIG3H
   CONFIG  CCP2MX = PORTC        ; CCP2 Mux (RC1)
   CONFIG  ECCPMX = PORTE        ; ECCP Mux (Enhanced CCP1/3 [P1B/P1C/P3B/P3C] muxed with RE6/RE5/RE4/RE3)
-  CONFIG  MSSPMSK = 1           ; MSSP address masking (7 Bit address masking mode)
+  CONFIG  MSSPMSK = 0        ; MSSP address masking (7 Bit address masking mode)
   CONFIG  MCLRE = ON            ; Master Clear Enable (MCLR Enabled, RG5 Disabled)
 
 ; CONFIG4L
