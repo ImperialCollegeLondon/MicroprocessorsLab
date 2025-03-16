@@ -1,6 +1,7 @@
 #include <xc.inc>
 	
-global	Timer_Setup, Lookup_Setup, DDS_Int_Hi
+global	Phase_Setup, Timer_Setup, Lookup_Setup, DDS_Int_Hi  ; global routines
+global	Phase_Jump, Phase_Accum	; global variables
 
 
 psect	udata_acs   ; reserve data space in access ram
@@ -13,7 +14,7 @@ Lookup_Array:	ds  0xFF
 
 psect	data
 
-Lookup_Table:	;   sine wave
+Lookup_Table:	; sine wave
 	db	0x80, 0x83, 0x86, 0x89, 0x8c, 0x8f, 0x92, 0x95
 	db	0x98, 0x9c, 0x9f, 0xa2, 0xa5, 0xa8, 0xab, 0xae
 	db	0xb0, 0xb3, 0xb6, 0xb9, 0xbc, 0xbf, 0xc1, 0xc4
@@ -94,14 +95,17 @@ Loop:
 	decfsz	Counter,    A	    ; count down to zero
 	bra	Loop
 	clrf	POSTINC0,   A
+	movlw	0x04
+	movwf	FSR0H,	A
 	return
 
 Output_Wav:
+Phase_Amp:
+	movff	Phase_Accum, FSR0L
+	movff	INDF0,	LATD
 Phase_Inc:
 	movf	Phase_Jump, W,	A
 	addwf	Phase_Accum, A
-Phase_Amp:
-	movff	Phase_Accum, LATD
 	return
 
 	end
