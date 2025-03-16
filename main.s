@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-extrn	Timer_Setup, Lookup_Setup, DDS_Int_Hi
+extrn	Phase_Setup, Timer_Setup, Lookup_Setup, DDS_Int_Hi
 
 psect	code, abs
 rst:	org	0x0000	; reset vector
@@ -9,7 +9,8 @@ rst:	org	0x0000	; reset vector
 int_hi:	org	0x0008	; high vector, no low vector
 	goto	DDS_Int_Hi
 	
-start:	call	Timer_Setup
+start:	call	Phase_Setup
+	call	Timer_Setup
 	call	Lookup_Setup
 	goto	$	; Sit in infinite loop
 
