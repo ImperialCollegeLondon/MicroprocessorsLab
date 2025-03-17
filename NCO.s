@@ -1,16 +1,9 @@
 #include <xc.inc>
 	
 global	Phase_Setup, Timer_Setup, Lookup_Setup, DDS_Int_Hi  ; global routines
-global	Phase_Jump, Phase_Accum	; global variables
-
 
 psect	udata_acs   ; reserve data space in access ram
-Phase_Accum:	ds  1
-Phase_Jump:	ds  1
-Counter:	ds  1
-
-psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
-Lookup_Array:	ds  0xFF
+Phase_Jump:	ds  2
 
 psect	data
 
@@ -51,26 +44,16 @@ Lookup_Table:	; sine wave
 	align	2
     
 psect	dac_code, class=CODE
-	
-DDS_Int_Hi:	
-	btfss	TMR0IF		; check that this is timer0 interrupt
-	retfie	f		; if not then return
-	call	Output_Wav
-	bcf	TMR0IF		; clear interrupt flag
-	retfie	f		; fast return from interrupt
 
 Phase_Setup:
-	clrf	Phase_Accum,	A
 	clrf	Phase_Jump,	A
-	movlw	0x00
-	movwf	Phase_Accum,	A
 	movlw	0x01
 	movwf	Phase_Jump,	A
 	return
 
 Timer_Setup:
-	clrf	TRISD,	A	; Set PORTD as all outputs
-	clrf	LATD,	A	; Clear PORTD outputs
+	clrf	TRISJ,	A	; Set PORTD as all outputs
+	clrf	LATJ,	A	; Clear PORTD outputs
 	movlw	10001000B	; Set timer0 to 16-bit, Fosc/4
 	movwf	T0CON,	A	; = 16MHz clock rate, approx 4ms rollover
 	bsf	TMR0IE		; Enable timer0 interrupt
@@ -80,32 +63,24 @@ Timer_Setup:
 Lookup_Setup:
 	bcf	CFGS			; point to Flash program memory  
 	bsf	EEPGD			; access Flash program memory
-	lfsr	0, Lookup_Array		; Load FSR0 with address in RAM	
 	movlw	low highword(Lookup_Table)	; address of data in PM
 	movwf	TBLPTRU,    A		; load upper bits to TBLPTRU
 	movlw	high(Lookup_Table)	; address of data in PM
 	movwf	TBLPTRH,    A		; load high byte to TBLPTRH
 	movlw	low(Lookup_Table)	; address of data in PM
 	movwf	TBLPTRL,    A		; load low byte to TBLPTRL
-	movlw	Lookup_Length		; bytes to read
-	movwf	Counter,    A
-Loop:
-	tblrd*+			    ; one byte from PM to TABLAT, increment TBLPRT
-	movff	TABLAT, POSTINC0    ; move data from TABLAT to (FSR0), inc FSR0	
-	decfsz	Counter,    A	    ; count down to zero
-	bra	Loop
-	clrf	POSTINC0,   A
-	movlw	0x04
-	movwf	FSR0H,	A
 	return
 
-Output_Wav:
+DDS_Int_Hi:	
+	btfss	TMR0IF		; check that this is timer0 interrupt
+	retfie	f		; if not then return
 Phase_Amp:
-	movff	Phase_Accum, FSR0L
-	movff	INDF0,	LATD
+	tblrd*
+	movff	TABLAT, LATJ
 Phase_Inc:
 	movf	Phase_Jump, W,	A
-	addwf	Phase_Accum, A
-	return
+	;addwf	Phase_Accum, A
+	bcf	TMR0IF		; clear interrupt flag
+	retfie	f		; fast return from interrupt
 
 	end
