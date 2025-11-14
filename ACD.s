@@ -1,7 +1,23 @@
 #include <xc.inc>
 
-global  ADC_Setup, ADC_Read    
+global  ADC_Setup, ADC_Read   
+ 
+psect	udata_acs   ; reserve data space in access ram
+D1:    ds 1    ; reserve one byte for digit 1 of result
+D2:    ds 1    ; reserve one byte for digit 2
+D3:    ds 1    ; reserve one byte for digit 3
+D4:    ds 1    ; reserve one byte for digit 4
     
+RES0:	ds 4
+RES1:	ds 4
+RES2:	ds 4
+RES3:	ds 4
+
+ARG1L:	ds 1
+ARG1H:	ds 1
+ARG2L:	ds 1
+ARG2H:	ds 1 
+
 psect	adc_code, class=CODE
     
 ADC_Setup:
@@ -24,4 +40,8 @@ adc_loop:
 	bra	adc_loop
 	return
 
+ADC_Convert:
+	k	EQU   0x418A ; conversion factor k
+	
+	
 end
