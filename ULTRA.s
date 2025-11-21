@@ -3,7 +3,7 @@
 */
 #include <xc.inc>
     
-global ULTRA_Setup, ULTRA_Pulse
+global ULTRA_Setup, ULTRA_Pulse, ULTRA_Measure, ULTRA_Convert, ULTRA_delay_ms	
     
 psect	udata_acs   ; named variables in access ram
 ULTRA_cnt_l:	ds 1	; reserve 1 byte for variable ULTRA_cnt_l
@@ -12,28 +12,36 @@ ULTRA_cnt_ms:	ds 1
     
 psect	ultra_code,class=CODE    
 ULTRA_Setup:
-    movlw   0x00; 01000000B
+    movlw   01000000B
     movwf   TRISD, A	; set portc i/o
-    movlw   0x00 ;00000100B
-    movwf   PORTD, A	; set Vcc (5V)
+    ;movlw   00000100B
+    ;movwf   PORTD, A	; set Vcc (5V)
     return
     
     
 ULTRA_Pulse:
-    movlw   0xFF
+    movlw   00010000B
     movwf   PORTD, A ; signal on
-    movlw   0xFF
-    call    ULTRA_delay_ms ; delay for 4 us
-    movlw   0x00; 00000100B
+    movlw   2
+    call    ULTRA_delay_ms ; delay for 2 ms
+    movlw   00000000B
     movwf   PORTD, A ; signal off - device will now send 8 cycle sonic burst
-    call    ULTRA_Measure
-    
-    ; note: there seems to be an issue looping over pulse and measure as it does not seem to keep its period: the pulse stays on for increasingly long periods
+    return
 
 ULTRA_Measure:
-    movlw   0x1F
+    movlw   100
     call    ULTRA_delay_ms ; delay for 100 ms
-    call    ULTRA_Pulse
+    ; read time between send and receive:
+    ; interrupt on rising edge of echo
+    ; count
+    ; interrupt on falling edge of echo
+   
+    ; convert to distance using speed of sound
+    ; output measured distance in hex
+    return
+    
+ULTRA_Convert:
+    return
     
     
 ULTRA_delay_ms:		    ; delay given in ms in W

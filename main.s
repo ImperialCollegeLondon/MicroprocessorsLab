@@ -1,9 +1,9 @@
 #include <xc.inc>
 
 extrn	UART_Setup, UART_Transmit_Message  ; external uart subroutines
-extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex ; external LCD subroutines
+extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Clear ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read, ADC_Convert		   ; external ADC subroutines
-extrn	ULTRA_Setup, ULTRA_Pulse
+extrn	ULTRA_Setup, ULTRA_Pulse, ULTRA_Measure, ULTRA_Convert, ULTRA_delay_ms
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -28,12 +28,32 @@ rst: 	org 0x0
 setup:	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
 	; call	UART_Setup	; setup UART
-	;call	LCD_Setup	; setup UART
+	call	LCD_Setup	; setup LCD
 	;call	ADC_Setup	; setup ADC
 	call	ULTRA_Setup
 	goto	start
 
-start:	call ULTRA_Pulse
+start:	
+	call	ULTRA_Pulse
+	call	ULTRA_Measure
+	call	ULTRA_Convert; use measured distance and convert to cm
+	; output cm value to LCD
+	call	LCD_Clear ; clear LCD to prepare for new value to be output
+	;lfsr	2, measurement result U
+	;call	LCD_Write_Message
+	;lfsr	2, measurement result H
+	;call	LCD_Write_Message
+	;lfsr	2, measurement result L
+	;call	LCD_Write_Message
+	;lfsr	2, 'c'
+	;call	LCD_Write_Message
+	;lfsr	2, 'm'
+	;movlw	1000
+	;call	ULTRA_delay_ms ; delay for one second to prevent fast flashing
+	
+	
+	
+	goto start
 	
 	
 	
@@ -70,10 +90,10 @@ measure_loop:
 	movf	ADRESL, W, A
 	call	LCD_Write_Hex
 	goto	measure_loop		; goto current line in code
-	
+*/
 	; a delay subroutine if you need one, times around loop in delay_count
 delay:	decfsz	delay_count, A	; decrement until zero
 	bra	delay
 	return
-*/
+
 	end	rst
