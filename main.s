@@ -3,7 +3,7 @@
 extrn	UART_Setup, UART_Transmit_Message  ; external uart subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Clear ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read, ADC_Convert		   ; external ADC subroutines
-extrn	ULTRA_Setup, ULTRA_Pulse, ULTRA_Measure, ULTRA_Convert, ULTRA_delay_ms
+extrn	ULTRA_Setup, ULTRA_Pulse, ULTRA_Measure, ULTRA_Convert, ULTRA_delay_ms, High_ISR
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -23,6 +23,10 @@ myTable:
 psect	code, abs	
 rst: 	org 0x0
  	goto	setup
+	
+int_hi:
+    org 0x0008		    ; if high priority interrupt is triggered
+    goto    High_ISR
 
 	; ******* Programme FLASH read Setup Code ***********************
 setup:	bcf	CFGS	; point to Flash program memory  
