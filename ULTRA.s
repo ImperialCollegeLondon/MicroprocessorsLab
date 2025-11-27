@@ -4,7 +4,7 @@
 #include <xc.inc>
     
 global ULTRA_Setup, ULTRA_Pulse, ULTRA_Measure, ULTRA_Convert, ULTRA_delay_ms, High_ISR
-global t1L, t1H, t2L, t2H
+global t1L, t1H, t2L, t2H, tstatL, tstatH 
     
 psect	udata_acs	    ; named variables in access ram
 ULTRA_cnt_l:	ds 1	    ; reserve 1 byte for variable ULTRA_cnt_l
@@ -14,6 +14,8 @@ t1L:		ds 1
 t1H:		ds 1
 t2L:		ds 1
 t2H:		ds 1
+tstatH:		ds 1
+tstatL:		ds 1
     
 psect	ultra_code,class=CODE    
 ULTRA_Setup:
@@ -21,9 +23,8 @@ ULTRA_Setup:
     movwf   TRISD, A	; set portc i/o
     ;movlw   00000100B
     ;movwf   PORTD, A	; set Vcc (5V)
-    
     movlw   0xFF
-    movwf   TRISE, A	    ;  -> configure CCP6 pin to input
+    movwf   TRISE, A	    ;  -> in order to configure CCP6 pin to input
     return
 	
 High_ISR:
@@ -34,29 +35,15 @@ High_ISR:
     andlw   0x0F	    ; keep relevant bits only
     xorlw   0101B	    ; compare to 0101B for rising edge mode
     btfsc   STATUS, 2, A    ; skip next instruction if comparison yielded false
-    goto    ISR_CCP6_Rise
+    goto    ISR_CCP6_Rise   
     goto    ISR_CCP6_Fall
     
 ISR_CCP6_Rise:
-    movf    CCPR6L, W, A	    ; save timer value L
-    movwf   t1L, A
-    movf    CCPR6H, W, A	    ; save timer value H
-    movwf   t1H, A
-    bcf	    CCP6IF, A    ; clear interrupt flag
-    movlw   00001000B	 ; falling edge mode
-    movwf   CCP6CON, A
-    movlw   00110001B	    ; prescaler 1:8 for timer1, use internal clock, enable timer1
-    movwf   T1CON, A
     clrf    TMR1H, A	    ; clear timer bytes
     clrf    TMR1L, A
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+    bcf	    CCP6IF, A		    ; clear interrupt flag
+    movlw   0000100B		    ; falling edge mode
+    movwf   CCP6CON, A
     goto    OtherISR
     
 ISR_CCP6_Fall:
@@ -64,7 +51,7 @@ ISR_CCP6_Fall:
     movwf   t2L, A
     movf    CCPR6H, W, A	    ; save timer value H
     movwf   t2H, A
-    bcf	    CCP6IF, A    ; clear interrupt flag
+    bcf	    CCP6IF, A		    ; clear interrupt flag
     goto    OtherISR
     
 OtherISR:
@@ -90,32 +77,31 @@ ULTRA_Measure:
     movwf   T1CON, A
     clrf    TMR1H, A	    ; clear timer bytes
     clrf    TMR1L, A
-    bsf	    CCP6IE, A    ; enable CCP interrupt
-    bsf	    CCP6IP, A    ; set priority of CCP6 to high
-    bsf	    PEIE, A    ; enable peripheral interrupts
-    bcf	    CCP6IF, A    ; clear interrupt flag to be safe
+    bsf	    CCP6IE, A	    ; enable CCP interrupt
+    bsf	    CCP6IP, A	    ; set priority of CCP6 to high
+    bsf	    PEIE, A	    ; enable peripheral interrupts
+    bcf	    CCP6IF, A	    ; clear interrupt flag to be safe
     bsf	    GIE, A	    ; enable global interrupt
-    /*
-    movlw   3
-    call    ULTRA_delay_ms ; give it time to send pulses  
-    movlw   00000100B	    ; capture every falling edge
-    movwf   CCP6CON, A
-    */
-    ; wait
+    ; wait for echo
     movlw   100
     call    ULTRA_delay_ms  ; delay for 100 ms
     
-    
     ; read time between send and receive:
     ; interrupt on rising edge of echo
-    ; count
+    ; reset timer
     ; interrupt on falling edge of echo
-   
+    ; save time value
+    
     ; convert to distance using speed of sound
+    
+    
     ; output measured distance in hex
     return
     
 ULTRA_Convert:
+    ; take the timer values stored in t2H and t2L and multiply by 0x56
+    ; divide by 0xA three times
+    ; output hex result somehow
     return
     
     
