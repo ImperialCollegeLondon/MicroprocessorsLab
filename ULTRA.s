@@ -1,21 +1,45 @@
 /* 
-    File for ultrasonic sensor modules
+    File for ultrasonic sensor software modules
 */
 #include <xc.inc>
     
 global ULTRA_Setup, ULTRA_Pulse, ULTRA_Measure, ULTRA_Convert, ULTRA_delay_ms, High_ISR
-global t1L, t1H, t2L, t2H, tstatL, tstatH 
+global t2L, t2H, RES0, RES1, RES2
     
 psect	udata_acs	    ; named variables in access ram
 ULTRA_cnt_l:	ds 1	    ; reserve 1 byte for variable ULTRA_cnt_l
 ULTRA_cnt_h:	ds 1	    ; reserve 1 byte for variable ULTRA_cnt_h
-ULTRA_cnt_ms:	ds 1	
-t1L:		ds 1
-t1H:		ds 1
+ULTRA_cnt_ms:	ds 1
+    
 t2L:		ds 1
 t2H:		ds 1
-tstatH:		ds 1
-tstatL:		ds 1
+    
+ARG1L:		ds 1
+ARG1H:		ds 1
+ARG2:		ds 1
+    
+RES0x:		ds 1
+RES1x:		ds 1
+RES2x:		ds 1
+
+SHIFTS:		ds 1	    ; number of shifts to execute in our binary to decimal converter
+
+DRES0:		ds 1
+DRES1:		ds 1
+DRES2:		ds 1
+DRES3:		ds 1
+    
+DIST1:		ds 1	; distance digits in decimal
+DIST2:		ds 1
+DIST3:		ds 1
+DIST4:		ds 1
+DIST5:		ds 1
+DIST6:		ds 1
+DIST7:		ds 1
+DIST8:		ds 1	 ; adjust as needed
+    
+DDL:		ds 1
+DDH:		ds 1
     
 psect	ultra_code,class=CODE    
 ULTRA_Setup:
@@ -92,17 +116,91 @@ ULTRA_Measure:
     ; interrupt on falling edge of echo
     ; save time value
     
-    ; convert to distance using speed of sound
-    
-    
-    ; output measured distance in hex
     return
     
-ULTRA_Convert:
-    ; take the timer values stored in t2H and t2L and multiply by 0x56
-    ; divide by 0xA three times
-    ; output hex result somehow
-    return
+ULTRA_Hex_Time_to_Dist:
+	; take the timer values stored in t2H and t2L and multiply by 0x56
+	; output hex result
+	movff	t2L, ARG1L, A	; setup arguments
+	movff	t2H, ARG1H, A
+	movlw	0x56 ; = 86D = 344/4 m/s
+	movwf	ARG2, A
+    
+	movf	ARG1L, W, A
+	mulwf	ARG2
+	
+	movff	PRODH, RES1x
+	movff	PRODL, RES0x
+	
+	movf	ARG1H, W, A
+	mulwf	ARG2
+
+	movff	PRODH, RES2x
+	
+	movf	PRODL, W	   ; directly process product, skip saving 
+	addwfc	RES1x, F
+	clrf	WREG
+	addwfc	RES2x, F
+	
+	 return
+	
+Ultra_Dist_Convert:
+	; Double dabble decimal conversion
+	movlw	24D		    ; 24 shifts to execute in our BCD
+	movf	SHIFTS
+	
+	clrf	DRES0
+	clrf	DRES1
+	clrf	DRES2
+	clrf	DRES3
+	bcf	STATUS, 0	    ; clear carry bit
+
+Ultra_loop:
+	; check low nibble > 4
+	movf	DRES0, W
+	andlw	0x0F	    ; only want bottom nibble
+	sublw	4	    ; if w greater than or equal to 5, there is no carry
+	movf	DRES0, W
+	andlw	0x0F	    ; only want bottom nibble
+	btfsc	STATUS, 0
+	addlw	00000011B
+	movwf	DDL
+
+	swapf	DRES0, W
+	andlw	0x0F	    ; only want top nibble
+	sublw	4
+	movf	DRES0, W
+	andlw	0xF0	    ; only want top nibble
+	btfsc	STATUS, 0
+	addlw	00110000B   ; add 3 to top nibble
+	iorwf	DDL, W	    ; combine low nibble from earlier with high nibble in W
+	movwf	DRES0, A
+	
+	; WORK IN PROGRESS MODIFY ME PLEASE
+	
+	
+
+	
+	; shifting time!
+	rlcf	RES0x
+	rlcf	RES1x
+	rlcf	RES2x
+	rlcf	DRES0
+	rlcf	DRES1
+	rlcf	DRES2
+	rlcf	DRES3
+	
+	
+	
+	
+	
+	
+	
+	; Finish conversion 
+	btfss	SHIFTS		    ; check we've gone through all our shifts
+	return			    ; return if counter is 0
+	goto	Ultra_Dist_Convert  ; loop is counter is nonzero
+   
     
     
 ULTRA_delay_ms:		    ; delay given in ms in W
