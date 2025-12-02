@@ -1,9 +1,10 @@
 #include <xc.inc>
 
 extrn	UART_Setup, UART_Transmit_Message  ; external uart subroutines
-extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Clear ; external LCD subroutines
+extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Clear, LCD_Write_Distance, LCD_Max_Message, LCD_Mode_Error ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read, ADC_Convert		   ; external ADC subroutines
-extrn	ULTRA_Setup, ULTRA_Pulse, ULTRA_Measure, ULTRA_Convert, ULTRA_delay_ms, High_ISR
+extrn	ULTRA_Setup, ULTRA_Pulse, ULTRA_Measure, ULTRA_Dist_Convert, ULTRA_delay_ms, High_ISR, ULTRA_Hex_Time_to_Dist
+extrn	DIST1, DIST2, DIST3, DIST4, DIST5, DIST6, DIST7
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -15,9 +16,9 @@ myArray:    ds 0x80 ; reserve 128 bytes for message data
 psect	data    
 	; ******* myTable, data in programme memory, and its length *****
 myTable:
-	db	'H','e','l','l','o',' ','W','o','r','l','d','!',0x0a
+	db	'M','a','x',' ','d','i','s','t','.','>', 0x0a
 					; message, plus carriage return
-	myTable_l   EQU	13	; length of data
+	myTable_l   EQU	10	; length of data
 	align	2
     
 psect	code, abs	
@@ -35,29 +36,61 @@ setup:	bcf	CFGS	; point to Flash program memory
 	call	LCD_Setup	; setup LCD
 	;call	ADC_Setup	; setup ADC
 	call	ULTRA_Setup
-	goto	start
-
-start:	
+	
+	; check for mode
+	movlw	0xFF
+	movwf	TRISJ ; take input from port J
+	nop
+	nop
+	nop
+	nop
+	
+	movf	PORTJ, W
+	xorlw   00000001B	    ; compare to 0101B for rising edge mode
+	btfsc   STATUS, 2, A    ; skip next instruction if comparison yielded false
+	goto	Distance_cont_mode_start
+	
+	movf	PORTJ, W
+	xorlw   00000010B	    ; compare to 0101B for rising edge mode
+	btfsc   STATUS, 2, A    ; skip next instruction if comparison yielded false
+	goto	Proximity_mode_start
+	
+	movf	PORTJ, W
+	xorlw   00000100B	    ; compare to 0101B for rising edge mode
+	btfsc   STATUS, 2, A    ; skip next instruction if comparison yielded false
+	goto	Motion_mode_start
+	
+	goto	Mode_not_found	    ; check if an invalid mode was selected
+	
+Mode_not_found:
+    call LCD_Mode_Error		    ; display error message
+    goto    $
+	
+Proximity_mode_start:
+    goto    Proximity_mode_start
+Motion_mode_start:
+    goto    Motion_mode_start
+    
+Distance_cont_mode_start:	
 	call	ULTRA_Pulse
 	call	ULTRA_Measure
-	call	ULTRA_Convert; use measured distance and convert to cm
+	call	ULTRA_Hex_Time_to_Dist
+	call	ULTRA_Dist_Convert; use measured distance and convert to cm
 	; output cm value to LCD
 	call	LCD_Clear ; clear LCD to prepare for new value to be output
-	;lfsr	2, measurement result U
-	;call	LCD_Write_Message
-	;lfsr	2, measurement result H
-	;call	LCD_Write_Message
-	;lfsr	2, measurement result L
-	;call	LCD_Write_Message
-	;lfsr	2, 'c'
-	;call	LCD_Write_Message
-	;lfsr	2, 'm'
-	;movlw	1000
-	;call	ULTRA_delay_ms ; delay for one second to prevent fast flashing
+	; check for timer overflow
+	btfsc	PIR1, 0
+	call	LCD_Max_Message
+	btfss	PIR1, 0
+	call	LCD_Write_Distance
+	
+	movlw	0xFF
+	call	ULTRA_delay_ms
+	   
 	
 	
 	
-	goto start
+	goto Distance_cont_mode_start
 	
 	
 	

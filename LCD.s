@@ -1,6 +1,8 @@
 #include <xc.inc>
 
-global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Clear
+global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Clear, LCD_Write_Distance, LCD_Max_Message, LCD_Mode_Error
+extrn	DIST1, DIST2, DIST3, DIST4, DIST5, DIST6, DIST7
+
 
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1	; reserve 1 byte for variable LCD_cnt_l
@@ -78,8 +80,62 @@ LCD_Loop_message:
 	movf    POSTINC2, W, A
 	call    LCD_Send_Byte_D
 	decfsz  LCD_counter, A
-	bra	LCD_Loop_message
+	bra	LCD_Loop_message 
 	return
+
+LCD_Write_Distance:
+    ; write the low nibble of the DISTX variables since those have the form 0x0X
+    movf    DIST1, W
+    call    LCD_Hex_Nib 
+    movf    DIST2, W
+    call    LCD_Hex_Nib
+    movf    DIST3, W
+    call    LCD_Hex_Nib
+    movlw   '.'
+    call    LCD_Send_Byte_D	; for . and cm we need to use send byte d
+    movf    DIST4, W
+    call    LCD_Hex_Nib
+    movf    DIST5, W
+    call    LCD_Hex_Nib
+    movlw   'c'
+    call    LCD_Send_Byte_D
+    movlw   'm'
+    call    LCD_Send_Byte_D
+    return
+
+LCD_Max_Message:
+    movlw   '>'
+    call    LCD_Send_Byte_D
+    movlw   '6'
+    call    LCD_Send_Byte_D
+    movlw   '.'
+    call    LCD_Send_Byte_D
+    movlw   '5'
+    call    LCD_Send_Byte_D
+    movlw   'm'
+    call    LCD_Send_Byte_D
+    return
+    
+LCD_Mode_Error:
+    movlw   'M'
+    call    LCD_Send_Byte_D
+    movlw   'o'
+    call    LCD_Send_Byte_D
+    movlw   'd'
+    call    LCD_Send_Byte_D
+    movlw   'e'
+    call    LCD_Send_Byte_D
+    movlw   ' '
+    call    LCD_Send_Byte_D
+    movlw   'e'
+    call    LCD_Send_Byte_D
+    movlw   'r'
+    call    LCD_Send_Byte_D
+    movlw   'r'
+    call    LCD_Send_Byte_D
+    movlw   '!'
+    call    LCD_Send_Byte_D
+    return
 
 LCD_Send_Byte_I:	    ; Transmits byte stored in W to instruction reg
 	movwf   LCD_tmp, A

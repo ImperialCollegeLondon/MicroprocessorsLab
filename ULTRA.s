@@ -3,8 +3,9 @@
 */
 #include <xc.inc>
     
-global ULTRA_Setup, ULTRA_Pulse, ULTRA_Measure, ULTRA_Convert, ULTRA_delay_ms, High_ISR
-global t2L, t2H, RES0, RES1, RES2
+global ULTRA_Setup, ULTRA_Pulse, ULTRA_Measure, ULTRA_Dist_Convert, ULTRA_delay_ms, High_ISR, ULTRA_Hex_Time_to_Dist
+global t2L, t2H, RES0x, RES1x, RES2x, DRES0, DRES1, DRES2, DRES3, SHIFTS
+global DIST1, DIST2, DIST3, DIST4, DIST5, DIST6, DIST7
     
 psect	udata_acs	    ; named variables in access ram
 ULTRA_cnt_l:	ds 1	    ; reserve 1 byte for variable ULTRA_cnt_l
@@ -24,19 +25,24 @@ RES2x:		ds 1
 
 SHIFTS:		ds 1	    ; number of shifts to execute in our binary to decimal converter
 
+    ;0 is LSF
+xARG0:		ds 1
+xARG1:		ds 1
+xARG2:		ds 1
+    
 DRES0:		ds 1
 DRES1:		ds 1
 DRES2:		ds 1
 DRES3:		ds 1
     
+    ;1 is MSF
 DIST1:		ds 1	; distance digits in decimal
 DIST2:		ds 1
 DIST3:		ds 1
 DIST4:		ds 1
 DIST5:		ds 1
 DIST6:		ds 1
-DIST7:		ds 1
-DIST8:		ds 1	 ; adjust as needed
+DIST7:		ds 1	 ; adjust as needed
     
 DDL:		ds 1
 DDH:		ds 1
@@ -76,6 +82,8 @@ ISR_CCP6_Fall:
     movf    CCPR6H, W, A	    ; save timer value H
     movwf   t2H, A
     bcf	    CCP6IF, A		    ; clear interrupt flag
+    movlw   00110000B	    ; prescaler 1:8 for timer1, use internal clock, disable timer1
+    movwf   T1CON, A
     goto    OtherISR
     
 OtherISR:
@@ -101,6 +109,7 @@ ULTRA_Measure:
     movwf   T1CON, A
     clrf    TMR1H, A	    ; clear timer bytes
     clrf    TMR1L, A
+    bcf	    TMR1IF, A	    ; clear timer overflow interrupt flag	    
     bsf	    CCP6IE, A	    ; enable CCP interrupt
     bsf	    CCP6IP, A	    ; set priority of CCP6 to high
     bsf	    PEIE, A	    ; enable peripheral interrupts
@@ -115,6 +124,8 @@ ULTRA_Measure:
     ; reset timer
     ; interrupt on falling edge of echo
     ; save time value
+    
+    ; check if timer exceeds max
     
     return
     
@@ -142,12 +153,16 @@ ULTRA_Hex_Time_to_Dist:
 	clrf	WREG
 	addwfc	RES2x, F
 	
-	 return
+	return
 	
-Ultra_Dist_Convert:
+ULTRA_Dist_Convert:
 	; Double dabble decimal conversion
-	movlw	24D		    ; 24 shifts to execute in our BCD
-	movf	SHIFTS
+	movlw	24		    ; 24 shifts to execute in our BCD
+	movwf	SHIFTS
+	
+	movff	RES0x, xARG0
+	movff	RES1x, xARG1
+	movff	RES2x, xARG2
 	
 	clrf	DRES0
 	clrf	DRES1
@@ -155,14 +170,15 @@ Ultra_Dist_Convert:
 	clrf	DRES3
 	bcf	STATUS, 0	    ; clear carry bit
 
-Ultra_loop:
+    BDC_loop:
 	; check low nibble > 4
+	; DRES0
 	movf	DRES0, W
 	andlw	0x0F	    ; only want bottom nibble
 	sublw	4	    ; if w greater than or equal to 5, there is no carry
 	movf	DRES0, W
 	andlw	0x0F	    ; only want bottom nibble
-	btfsc	STATUS, 0
+	btfss	STATUS, 0
 	addlw	00000011B
 	movwf	DDL
 
@@ -171,36 +187,116 @@ Ultra_loop:
 	sublw	4
 	movf	DRES0, W
 	andlw	0xF0	    ; only want top nibble
-	btfsc	STATUS, 0
+	btfss	STATUS, 0
 	addlw	00110000B   ; add 3 to top nibble
 	iorwf	DDL, W	    ; combine low nibble from earlier with high nibble in W
 	movwf	DRES0, A
 	
-	; WORK IN PROGRESS MODIFY ME PLEASE
-	
-	
+	;DRES1
+	movf	DRES1, W
+	andlw	0x0F	    ; only want bottom nibble
+	sublw	4	    ; if w greater than or equal to 5, there is no carry
+	movf	DRES1, W
+	andlw	0x0F	    ; only want bottom nibble
+	btfss	STATUS, 0
+	addlw	00000011B
+	movwf	DDL
 
+	swapf	DRES1, W
+	andlw	0x0F	    ; only want top nibble
+	sublw	4
+	movf	DRES1, W
+	andlw	0xF0	    ; only want top nibble
+	btfss	STATUS, 0
+	addlw	00110000B   ; add 3 to top nibble
+	iorwf	DDL, W	    ; combine low nibble from earlier with high nibble in W
+	movwf	DRES1, A
+	
+	;DRES2
+	movf	DRES2, W
+	andlw	0x0F	    ; only want bottom nibble
+	sublw	4	    ; if w greater than or equal to 5, there is no carry
+	movf	DRES2, W
+	andlw	0x0F	    ; only want bottom nibble
+	btfss	STATUS, 0
+	addlw	00000011B
+	movwf	DDL
+
+	swapf	DRES2, W
+	andlw	0x0F	    ; only want top nibble
+	sublw	4
+	movf	DRES2, W
+	andlw	0xF0	    ; only want top nibble
+	btfss	STATUS, 0
+	addlw	00110000B   ; add 3 to top nibble
+	iorwf	DDL, W	    ; combine low nibble from earlier with high nibble in W
+	movwf	DRES2, A
+	
+	;DRES3
+	movf	DRES3, W
+	andlw	0x0F	    ; only want bottom nibble
+	sublw	4	    ; if w greater than or equal to 5, there is no carry
+	movf	DRES3, W
+	andlw	0x0F	    ; only want bottom nibble
+	btfss	STATUS, 0
+	addlw	00000011B
+	movwf	DDL
+
+	swapf	DRES3, W
+	andlw	0x0F	    ; only want top nibble
+	sublw	4
+	movf	DRES3, W
+	andlw	0xF0	    ; only want top nibble
+	btfss	STATUS, 0
+	addlw	00110000B   ; add 3 to top nibble
+	iorwf	DDL, W	    ; combine low nibble from earlier with high nibble in W
+	movwf	DRES3, A
 	
 	; shifting time!
-	rlcf	RES0x
-	rlcf	RES1x
-	rlcf	RES2x
+	rlcf	xARG0
+	rlcf	xARG1
+	rlcf	xARG2
 	rlcf	DRES0
 	rlcf	DRES1
 	rlcf	DRES2
 	rlcf	DRES3
 	
 	
-	
-	
-	
-	
-	
 	; Finish conversion 
-	btfss	SHIFTS		    ; check we've gone through all our shifts
-	return			    ; return if counter is 0
-	goto	Ultra_Dist_Convert  ; loop is counter is nonzero
-   
+	decfsz	SHIFTS	    ; decrement counter and check we've gone through all our shifts
+	goto	BDC_loop  ; loop if counter is nonzero
+	
+
+	; store decimal values in individual bits
+	movf	DRES0, W
+	andlw	0x0F	    ; only want bottom nibble
+	movwf	DIST7
+	
+	swapf	DRES0, W
+	andlw	0x0F	    ; only want top nibble
+	movwf	DIST6
+	
+	movf	DRES1, W
+	andlw	0x0F	    ; only want bottom nibble
+	movwf	DIST5
+	
+	swapf	DRES1, W
+	andlw	0x0F	    ; only want top nibble
+	movwf	DIST4
+	
+	movf	DRES2, W
+	andlw	0x0F	    ; only want bottom nibble
+	movwf	DIST3
+	
+	swapf	DRES2, W
+	andlw	0x0F	    ; only want top nibble
+	movwf	DIST2
+	
+	movf	DRES3, W
+	andlw	0x0F	    ; only want bottom nibble
+	movwf	DIST1
+	
+	return
     
     
 ULTRA_delay_ms:		    ; delay given in ms in W
