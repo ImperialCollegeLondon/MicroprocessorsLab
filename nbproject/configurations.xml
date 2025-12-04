@@ -23,6 +23,7 @@
       <itemPath>main.s</itemPath>
       <itemPath>config.s</itemPath>
       <itemPath>ULTRA.s</itemPath>
+      <itemPath>LED.s</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>

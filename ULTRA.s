@@ -298,7 +298,6 @@ ULTRA_Dist_Convert:
 	
 	return
     
-    
 ULTRA_delay_ms:		    ; delay given in ms in W
 	movwf	ULTRA_cnt_ms, A
 ultralp2:	movlw	250	    ; 1 ms delay

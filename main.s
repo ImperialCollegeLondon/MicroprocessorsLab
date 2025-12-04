@@ -5,6 +5,7 @@ extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Clear, LCD_Write_Distance
 extrn	ADC_Setup, ADC_Read, ADC_Convert		   ; external ADC subroutines
 extrn	ULTRA_Setup, ULTRA_Pulse, ULTRA_Measure, ULTRA_Dist_Convert, ULTRA_delay_ms, High_ISR, ULTRA_Hex_Time_to_Dist
 extrn	DIST1, DIST2, DIST3, DIST4, DIST5, DIST6, DIST7
+extrn	LED_Setup
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -38,25 +39,28 @@ setup:	bcf	CFGS	; point to Flash program memory
 	call	ULTRA_Setup
 	
 	; check for mode
-	movlw	0xFF
-	movwf	TRISJ ; take input from port J
+	movlw	0x0F
+	movwf	TRISJ ; set output from port J 0-3 and input from port J 4-7
 	nop
 	nop
 	nop
 	nop
 	
 	movf	PORTJ, W
-	xorlw   00000001B	    ; compare to 0101B for rising edge mode
+	iorlw	11110000B	; mask off top bits being used as outputs
+	xorlw   11110001B	; compare to 0101B for rising edge mode
 	btfsc   STATUS, 2, A    ; skip next instruction if comparison yielded false
 	goto	Distance_cont_mode_start
 	
 	movf	PORTJ, W
-	xorlw   00000010B	    ; compare to 0101B for rising edge mode
+	iorlw	11110000B
+	xorlw   11110010B	    ; compare to 0101B for rising edge mode
 	btfsc   STATUS, 2, A    ; skip next instruction if comparison yielded false
 	goto	Proximity_mode_start
 	
 	movf	PORTJ, W
-	xorlw   00000100B	    ; compare to 0101B for rising edge mode
+	iorlw	11110000B
+	xorlw   11110100B	    ; compare to 0101B for rising edge mode
 	btfsc   STATUS, 2, A    ; skip next instruction if comparison yielded false
 	goto	Motion_mode_start
 	
@@ -67,6 +71,7 @@ Mode_not_found:
     goto    $
 	
 Proximity_mode_start:
+    call    LED_Setup
     goto    Proximity_mode_start
 Motion_mode_start:
     goto    Motion_mode_start
