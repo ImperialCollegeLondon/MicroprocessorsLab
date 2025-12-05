@@ -3,7 +3,7 @@
 extrn	UART_Setup, UART_Transmit_Message  ; external uart subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Clear, LCD_Write_Distance, LCD_Max_Message, LCD_Mode_Error ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read, ADC_Convert		   ; external ADC subroutines
-extrn	ULTRA_Setup, ULTRA_Pulse, ULTRA_Measure, ULTRA_Dist_Convert, ULTRA_delay_ms, High_ISR, ULTRA_Hex_Time_to_Dist
+extrn	ULTRA_Setup, ULTRA_Pulse, ULTRA_Measure, ULTRA_Dist_Convert, ULTRA_delay_ms, High_ISR, ULTRA_Hex_Time_to_Dist, ULTRA_Motion_Detect
 extrn	DIST1, DIST2, DIST3, DIST4, DIST5, DIST6, DIST7
 extrn	LED_Setup, LED_Logic
 	
@@ -73,10 +73,6 @@ Mode_not_found:
     goto    $
 	
 Proximity_mode_start:
-    bcf	    LATJ, 7   ; clear LED pins
-    bcf	    LATJ, 6
-    bcf	    LATJ, 5
-    bcf	    LATJ, 4
     call    LED_Setup
    Proximity_mode_loop:
     call    ULTRA_Pulse
@@ -85,6 +81,7 @@ Proximity_mode_start:
     goto    Proximity_mode_loop
 
 Motion_mode_start:
+    call    ULTRA_Motion_Detect
     goto    Motion_mode_start
     
 Distance_cont_mode_start:	

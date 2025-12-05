@@ -21,7 +21,7 @@ FAR_H:	    ds	1
 psect	led_code,class=CODE   
 	
 LED_Setup:
-; setup pins 0-3 of port J as output in main
+; setup pins 4-7 of port J as output in main
     ; set delta t
     movlw   0xFF
     movwf   deltat_L
@@ -70,8 +70,12 @@ LED_Setup:
     
     movf	PRODL, W	   ; directly process product, skip saving 
     addwfc	FAR_H, F
-
     
+    bcf	    LATJ, 7   ; clear LED pins
+    bcf	    LATJ, 6
+    bcf	    LATJ, 5
+    bcf	    LATJ, 4
+
 LED_Logic:
     ; light  up leds in sequence
 FAR_Check:

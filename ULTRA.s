@@ -3,7 +3,7 @@
 */
 #include <xc.inc>
     
-global ULTRA_Setup, ULTRA_Pulse, ULTRA_Measure, ULTRA_Dist_Convert, ULTRA_delay_ms, High_ISR, ULTRA_Hex_Time_to_Dist
+global ULTRA_Setup, ULTRA_Pulse, ULTRA_Measure, ULTRA_Dist_Convert, ULTRA_delay_ms, High_ISR, ULTRA_Hex_Time_to_Dist, ULTRA_Motion_Detect
 global t2L, t2H, RES0x, RES1x, RES2x, DRES0, DRES1, DRES2, DRES3, SHIFTS
 global DIST1, DIST2, DIST3, DIST4, DIST5, DIST6, DIST7
     
@@ -47,9 +47,11 @@ DIST7:		ds 1	 ; adjust as needed
 DDL:		ds 1
 DDH:		ds 1
     
+TEMP:		ds 1
+    
 psect	ultra_code,class=CODE    
 ULTRA_Setup:
-    movlw   01000000B
+    movlw   01000010B
     movwf   TRISD, A	; set portc i/o
     ;movlw   00000100B
     ;movwf   PORTD, A	; set Vcc (5V)
@@ -297,6 +299,33 @@ ULTRA_Dist_Convert:
 	movwf	DIST1
 	
 	return
+	
+ULTRA_Motion_Detect:
+    ; detect change in t2 that would indicate motion
+    ;take initial reading
+    call    ULTRA_Pulse
+    call    ULTRA_Measure
+    movff    t2H, TEMP, A
+    ; take next reading
+    call    ULTRA_Pulse
+    call    ULTRA_Measure
+    movf    t2H, W, A
+    ; is second reading different to first reading?
+    cpfseq  TEMP
+    call    motion_detected
+    goto    ULTRA_Motion_Detect
+    
+motion_detected:
+    ; flag that motion has been detected
+    ; turn on buzzer
+    bsf	    LATD, 0
+    goto    detect_loop
+detect_loop:
+    btfss   PORTD, 1    ; if the button is pressed, PORTD0 is pulled up - stop buzzing
+    goto    detect_loop
+    bcf	    LATD, 0	; stop buzzing even if button released; reset
+    return
+    
     
 ULTRA_delay_ms:		    ; delay given in ms in W
 	movwf	ULTRA_cnt_ms, A
