@@ -177,6 +177,7 @@ CLO_LED:
     
 LIM_LED:
     bsf	    LATJ, 7
+    bsf	    LATD, 0 ; buzzer on (?)
     return		; all LEDs on, return
 
 

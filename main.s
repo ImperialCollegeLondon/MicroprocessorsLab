@@ -4,7 +4,7 @@ extrn	UART_Setup, UART_Transmit_Message  ; external uart subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_Write_Hex, LCD_Clear, LCD_Write_Distance, LCD_Max_Message, LCD_Mode_Error ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read, ADC_Convert		   ; external ADC subroutines
 extrn	ULTRA_Setup, ULTRA_Pulse, ULTRA_Measure, ULTRA_Dist_Convert, ULTRA_delay_ms, High_ISR, ULTRA_Hex_Time_to_Dist, ULTRA_Motion_Detect
-extrn	DIST1, DIST2, DIST3, DIST4, DIST5, DIST6, DIST7
+extrn	DIST1, DIST2, DIST3, DIST4, DIST5, DIST6, DIST7, deltat_H, deltat_L
 extrn	LED_Setup, LED_Logic
 	
 psect	udata_acs   ; reserve data space in access ram
@@ -74,9 +74,22 @@ Mode_not_found:
 	
 Proximity_mode_start:
     call    LED_Setup
+    call    ADC_Setup
    Proximity_mode_loop:
     call    ULTRA_Pulse
     call    ULTRA_Measure
+    ; prepare distance scale
+    call    ADC_Read
+    movff   ADRESH, deltat_H
+    movff   ADRESL, deltat_L
+    ; clear carry bit and shift twice
+    clrf    STATUS, 0
+    rrcf    deltat_H
+    rrcf    deltat_L
+    clrf    STATUS, 0
+    rrcf    deltat_H
+    rrcf    deltat_L
+    ; execute distance check and LED logic
     call    LED_Logic
     goto    Proximity_mode_loop
 

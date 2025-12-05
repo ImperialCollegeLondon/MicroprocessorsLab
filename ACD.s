@@ -10,7 +10,6 @@ DEC1:    ds 1    ; reserve one byte for digit 2
 DEC2:    ds 1    ; reserve one byte for digit 3
 DEC3:    ds 1    ; reserve one byte for digit 4
 
-    
 RES0:	ds 4
 RES1:	ds 4
 RES2:	ds 4
@@ -44,6 +43,8 @@ adc_loop:
 	bra	adc_loop
 	return
 
+	
+	
 ADC_Convert:	; requires ADC_Read to be called first
 	; k is 0x418A - conversion factor k
 	movlw	0x41

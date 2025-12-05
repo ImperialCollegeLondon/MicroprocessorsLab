@@ -52,7 +52,7 @@ TEMP:		ds 1
 psect	ultra_code,class=CODE    
 ULTRA_Setup:
     movlw   01000010B
-    movwf   TRISD, A	; set portc i/o
+    movwf   TRISD, A	; set portd i/o
     ;movlw   00000100B
     ;movwf   PORTD, A	; set Vcc (5V)
     movlw   0xFF
