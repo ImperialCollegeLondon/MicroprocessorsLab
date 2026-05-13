@@ -1,0 +1,41 @@
+{
+    "version": "1.9",
+    "importedFrom": "./",
+    "propertyGroups": [
+        {
+            "name": "default-PIC-AS",
+            "type": "toolchain",
+            "provider": "microchip.toolchains:pic-as@3.10",
+            "properties": {}
+        }
+    ],
+    "fileSets": [
+        {
+            "name": "Project files",
+            "files": [
+                "Makefile",
+                "*.s"
+            ],
+            "encoding": "ISO-8859-1"
+        }
+    ],
+    "configurations": [
+        {
+            "name": "default",
+            "id": "conf1",
+            "device": "PIC18F87K22",
+            "imageType": "application",
+            "imagePath": "./out/Simple1/default.elf",
+            "packs": [
+                {
+                    "name": "PIC18F-K_DFP",
+                    "vendor": "Microchip",
+                    "version": "1.14.301"
+                }
+            ],
+            "fileSet": "Project files",
+            "toolchain": "default-PIC-AS",
+            "includeLegacyMacros": true
+        }
+    ]
+}

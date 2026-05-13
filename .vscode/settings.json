@@ -1,0 +1,9 @@
+{
+    "makefile.configureOnOpen": false,
+    "cmake.sourceDirectory": "/Users/maan/MicroprocessorsLab/cmake/Simple1/default",
+    "mplab.toolchains.showTestCommands": true,
+    "mplab.toolchains.customPaths": [
+        "/Applications/microchip/xc8/v3.10"
+    ],
+    "mplab.clangd.compileCommandsDir": "${workspaceFolder}/_build/Simple1/default"
+}
