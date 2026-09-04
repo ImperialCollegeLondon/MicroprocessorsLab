@@ -1,0 +1,12 @@
+{
+    "configurations": [
+        {
+            "reference": "default",
+            "toolSerial": "BUR203616196"
+        },
+        {
+            "reference": "Debug",
+            "toolSerial": "BUR203616196"
+        }
+    ]
+}

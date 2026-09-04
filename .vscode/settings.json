@@ -1,0 +1,13 @@
+{
+    "mplab.clangd.compileCommandsDir": "${workspaceFolder}\\_build\\Simple1\\default",
+    "files.associations": {
+        "*.s": "pic-as"
+    },
+    "debug.allowBreakpointsEverywhere": true,
+    "memory-inspector.debugTypes": [
+        "arm-debugger",
+        "embedded-debug",
+        "gdb",
+        "mplab-core-da"
+    ]
+}

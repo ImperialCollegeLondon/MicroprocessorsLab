@@ -1,0 +1,257 @@
+{
+    "version": "1.9",
+    "importedFrom": "./",
+    "configurations": [
+        {
+            "name": "default",
+            "id": "",
+            "device": "PIC18F87K22",
+            "imageType": "application",
+            "imagePath": "./out/Simple1/default.elf",
+            "toolProperties": "default-tool",
+            "tool": "PICkit 4",
+            "packs": [
+                {
+                    "name": "PIC18F-K_DFP",
+                    "vendor": "Microchip",
+                    "version": "1.14.301"
+                }
+            ],
+            "fileSet": "Project files",
+            "toolchain": "default-PIC-AS",
+            "includeLegacyMacros": true
+        },
+        {
+            "name": "Debug",
+            "id": "",
+            "device": "PIC18F87K22",
+            "imageType": "application",
+            "imagePath": "./out/Simple1/Debug.elf",
+            "toolProperties": "Debug_tool",
+            "tool": "PICkit 4",
+            "packs": [
+                {
+                    "name": "PIC18F-K_DFP",
+                    "vendor": "Microchip",
+                    "version": "1.14.301"
+                }
+            ],
+            "fileSet": "Debug_files",
+            "toolchain": "Debug_toolchain",
+            "includeLegacyMacros": true
+        }
+    ],
+    "propertyGroups": [
+        {
+            "name": "default-uservariables",
+            "type": "uservariables",
+            "properties": {}
+        },
+        {
+            "name": "Debug_toolchain",
+            "type": "toolchain",
+            "provider": "microchip.toolchains:pic-as@3.10",
+            "properties": {
+                "assembler.fmax-errors": "20",
+                "assembler.suppress-warnings": false,
+                "assembler.verbose": false,
+                "assembler.warning-level": "0",
+                "assembler.xassembler-with-cpp": true,
+                "linker.linker-callgraph": "full",
+                "linker.linker-format-hex-file-for-download": false,
+                "linker.linker-map-file-generation": true,
+                "linker.linker-maxi-chip": false,
+                "linker.linker-produce-intel-hex-extended-address-zero-output": false,
+                "global.dfp-override": "1",
+                "global.instruction-set": "std",
+                "global.summary-class": false,
+                "global.summary-file": false,
+                "global.summary-hex": false,
+                "global.summary-mem": true,
+                "global.summary-psect": true,
+                "global.summary-sha1": false,
+                "global.summary-sha256": false,
+                "global.summary-xml": false,
+                "global.summary-xmlfull": false,
+                "global.appendMe": [
+                    "-Wa,-a",
+                    "-Wl,-Map=output.map"
+                ]
+            }
+        },
+        {
+            "name": "default-PIC-AS",
+            "type": "toolchain",
+            "provider": "microchip.toolchains:pic-as@3.10",
+            "properties": {
+                "assembler.fmax-errors": "20",
+                "assembler.suppress-warnings": false,
+                "assembler.verbose": false,
+                "assembler.warning-level": "0",
+                "assembler.xassembler-with-cpp": true,
+                "linker.linker-callgraph": "full",
+                "linker.linker-format-hex-file-for-download": false,
+                "linker.linker-map-file-generation": true,
+                "linker.linker-maxi-chip": false,
+                "linker.linker-produce-intel-hex-extended-address-zero-output": false,
+                "global.dfp-override": "1",
+                "global.instruction-set": "std",
+                "global.summary-class": false,
+                "global.summary-file": false,
+                "global.summary-hex": false,
+                "global.summary-mem": true,
+                "global.summary-psect": true,
+                "global.summary-sha1": false,
+                "global.summary-sha256": false,
+                "global.summary-xml": false,
+                "global.summary-xmlfull": false,
+                "global.appendMe": [
+                    "-Wa,-a",
+                    "-Wl,-Map=output.map"
+                ]
+            }
+        },
+        {
+            "name": "Debug_tool",
+            "type": "tool",
+            "properties": {
+                "AutoSelectMemRanges": "auto",
+                "Freeze Peripherals": true,
+                "SecureSegment.SegmentProgramming": "FullChipProgramming",
+                "ToolFirmwareFilePath": "Press to browse for a specific firmware version",
+                "ToolFirmwareOption.UpdateOptions": "ToolFirmwareOption.UseLatest",
+                "ToolFirmwareToolPack": "Press to select which tool pack to use",
+                "communication.activationmode": "nohv",
+                "communication.interface": "${communication.interface.default}",
+                "communication.interface.jtag": "2wire",
+                "communication.speed": "${communication.speed.default}",
+                "debugoptions.debug-startup": "Use system settings",
+                "debugoptions.reset-behaviour": "Use system settings",
+                "debugoptions.simultaneous.debug": false,
+                "debugoptions.useswbreakpoints": false,
+                "event.recorder.debugger.behavior": "Running",
+                "event.recorder.enabled": false,
+                "freeze.timers": false,
+                "memories.aux": false,
+                "memories.bootflash": true,
+                "memories.configurationmemory": true,
+                "memories.configurationmemory2": true,
+                "memories.dataflash": true,
+                "memories.eeprom": true,
+                "memories.exclude.configurationmemory": true,
+                "memories.flashdata": true,
+                "memories.id": true,
+                "memories.instruction.ram.ranges": "${memories.instruction.ram.ranges}",
+                "memories.programmemory": true,
+                "memories.programmemory.ranges": "0-1ffff",
+                "poweroptions.powerenable": false,
+                "programmerToGoImageName": "default_ptg",
+                "programoptions.donoteraseauxmem": false,
+                "programoptions.eraseb4program": true,
+                "programoptions.ledbrightness": "5",
+                "programoptions.pgcconfig": "pull down",
+                "programoptions.pgcresistor.value": "4.7",
+                "programoptions.pgdconfig": "pull down",
+                "programoptions.pgdresistor.value": "4.7",
+                "programoptions.pgmentry.voltage": "high",
+                "programoptions.pgmspeed": "Med",
+                "programoptions.preservedataflash": false,
+                "programoptions.preservedataflash.ranges": "${memories.dataflash.default}",
+                "programoptions.preserveeeprom": false,
+                "programoptions.preserveeeprom.ranges": "0-3ff",
+                "programoptions.preserveprogramrange": false,
+                "programoptions.preserveuserid": false,
+                "programoptions.program.otpconfig": false,
+                "programoptions.programcalmem": false,
+                "programoptions.programuserotp": false,
+                "programoptions.smart.program": "When debugging only",
+                "programoptions.testmodeentrymethod": "VDDFirst",
+                "ptgProgramImage": true,
+                "ptgSendImage": true,
+                "toolpack.updateoptions": "toolpack.updateoptions.uselatestoolpack",
+                "toolpack.updateoptions.packversion": "Press to select which tool pack to use",
+                "voltagevalue": "3.25"
+            }
+        },
+        {
+            "name": "default-tool",
+            "type": "tool",
+            "properties": {
+                "AutoSelectMemRanges": "auto",
+                "Freeze Peripherals": true,
+                "SecureSegment.SegmentProgramming": "FullChipProgramming",
+                "ToolFirmwareFilePath": "Press to browse for a specific firmware version",
+                "ToolFirmwareOption.UpdateOptions": "ToolFirmwareOption.UseLatest",
+                "ToolFirmwareToolPack": "Press to select which tool pack to use",
+                "communication.activationmode": "nohv",
+                "communication.interface": "${communication.interface.default}",
+                "communication.interface.jtag": "2wire",
+                "communication.speed": "${communication.speed.default}",
+                "debugoptions.debug-startup": "Use system settings",
+                "debugoptions.reset-behaviour": "Use system settings",
+                "debugoptions.simultaneous.debug": false,
+                "debugoptions.useswbreakpoints": false,
+                "event.recorder.debugger.behavior": "Running",
+                "event.recorder.enabled": false,
+                "freeze.timers": false,
+                "memories.aux": false,
+                "memories.bootflash": true,
+                "memories.configurationmemory": true,
+                "memories.configurationmemory2": true,
+                "memories.dataflash": true,
+                "memories.eeprom": true,
+                "memories.exclude.configurationmemory": true,
+                "memories.flashdata": true,
+                "memories.id": true,
+                "memories.instruction.ram.ranges": "${memories.instruction.ram.ranges}",
+                "memories.programmemory": true,
+                "memories.programmemory.ranges": "0-1ffff",
+                "poweroptions.powerenable": false,
+                "programmerToGoImageName": "default_ptg",
+                "programoptions.donoteraseauxmem": false,
+                "programoptions.eraseb4program": true,
+                "programoptions.ledbrightness": "5",
+                "programoptions.pgcconfig": "pull down",
+                "programoptions.pgcresistor.value": "4.7",
+                "programoptions.pgdconfig": "pull down",
+                "programoptions.pgdresistor.value": "4.7",
+                "programoptions.pgmentry.voltage": "high",
+                "programoptions.pgmspeed": "Med",
+                "programoptions.preservedataflash": false,
+                "programoptions.preservedataflash.ranges": "${memories.dataflash.default}",
+                "programoptions.preserveeeprom": false,
+                "programoptions.preserveeeprom.ranges": "0-3ff",
+                "programoptions.preserveprogramrange": false,
+                "programoptions.preserveuserid": false,
+                "programoptions.program.otpconfig": false,
+                "programoptions.programcalmem": false,
+                "programoptions.programuserotp": false,
+                "programoptions.smart.program": "When debugging only",
+                "programoptions.testmodeentrymethod": "VDDFirst",
+                "ptgProgramImage": true,
+                "ptgSendImage": true,
+                "toolpack.updateoptions": "toolpack.updateoptions.uselatestoolpack",
+                "toolpack.updateoptions.packversion": "Press to select which tool pack to use",
+                "voltagevalue": "3.25"
+            }
+        }
+    ],
+    "fileSets": [
+        {
+            "name": "Project files",
+            "files": [
+                "Makefile",
+                "*.s"
+            ],
+            "encoding": "ISO-8859-1"
+        },
+        {
+            "name": "Debug_files",
+            "files": [
+                "Makefile",
+                "*.s"
+            ],
+            "encoding": "ISO-8859-1"
+        }
+    ]
+}

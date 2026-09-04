@@ -2,6 +2,7 @@
 
 extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
 extrn	LCD_Setup, LCD_Write_Message
+	global	counter, delay_count, myArray
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -13,7 +14,7 @@ myArray:    ds 0x80 ; reserve 128 bytes for message data
 psect	data    
 	; ******* myTable, data in programme memory, and its length *****
 myTable:
-	db	'H','e','l','l','o',' ','W','o','r','l','d','!',0x0a
+	db	'H','e','l','l','o',' ','V','S','C','o','d','e',0x0a
 					; message, plus carriage return
 	myTable_l   EQU	13	; length of data
 	align	2
