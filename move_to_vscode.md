@@ -31,11 +31,11 @@ This document captures the findings from setting up a PIC18 assembly project in 
    ```
 5. **Breakpoints**: Press `F9` or click in the left gutter beside an instruction to set a breakpoint.
 6. **Debug**: Click **Start Debugging** to connect the ICD and pause at breakpoints.
-7. **Inspection**: While paused, inspect registers in the **Variables/Watch** panel:
+7. **Inspection**: While paused, inspect the registers exposed by the adapter in the **Variables/Watch** panel:
    - `TABLAT`, `TBLPTRU`, `TBLPTRH`, `TBLPTRL` (program memory access)
    - `FSR0`, `FSR1`, `FSR2` (RAM pointers)
    - `WREG`, `STATUS` (working register and flags)
-   - `counter` (exported global symbols from assembly)
+  - General RAM symbols such as `counter` and `myArray` are exported, but are not resolved by the VS Code Watch view.
 
 ### Symbol Export
 
@@ -45,7 +45,46 @@ Add `global` declarations to [main.s](main.s) so the debugger can resolve variab
 global counter, delay_count, myArray
 ```
 
-After rebuild, attempt to add these to the Watch panel.
+After rebuilding, the symbols are present in `out/Simple1/Debug.sym`, but the MPLAB debug adapter does not reliably resolve assembly RAM symbols in the Watch view.
+
+### Debug Build and Linker Map
+
+- Build the **Debug** configuration with **Debug - Build**.
+- The Debug image is written to `out/Simple1/Debug.elf`.
+- The linker map is written to `_build/Simple1/Debug/output.map`.
+- The Debug map includes all four source files, including `LCD.s`, and records:
+  - `counter`: RAM address `0x005`
+  - `myArray`: RAM range `0x400`-`0x47F`
+  - `myTable`: program-memory address `0x1FED8`
+
+The older path `dist/default/debug/MicroprocessorsLab.debug.map` does not apply to the current CMake/Ninja build layout.
+
+### Stepping and Breakpoint Behaviour
+
+PIC18 debugging through the PICkit/MPLAB adapter reports the program counter after an instruction has executed. Consequently, a breakpoint on one instruction may display the following source line. For example, a breakpoint on:
+
+```asm
+bcf     CFGS
+```
+
+may display the following `bsf EEPGD` line after `bcf` has executed. A breakpoint on a `call` may display the called routine's first line because the call has already executed.
+
+**Step Over** uses a temporary breakpoint at the return address. With consecutive calls, such as:
+
+```asm
+call    UART_Setup
+call    LCD_Setup
+```
+
+the adapter can execute the second call before stopping, which appears to enter `LCD_Setup`. For more predictable stepping, place a harmless spacer instruction between calls while debugging:
+
+```asm
+call    UART_Setup
+nop
+call    LCD_Setup
+```
+
+The `nop` breakpoint may display `call LCD_Setup`; this means the `nop` has executed and the LCD call has not yet executed. For normal runs, use **Continue** with a breakpoint after the setup calls instead of relying on source-level Step Over.
 
 ---
 
@@ -54,11 +93,14 @@ After rebuild, attempt to add these to the Watch panel.
 ### Memory Inspector
 
 - **Program Memory**: Can view as raw hex bytes, but no disassembly.
-- **Data Memory/RAM**: Displays `FF` everywhere; not compatible with PIC18 memory spaces.
+- **Data Memory/RAM**: Displays `FF` or a blank value; not compatible with PIC18 memory spaces.
 - **Workaround**: Use the linker map to determine addresses:
-  - `myArray`: RAM `0x400`–`0x47F` (confirmed from `dist/default/debug/MicroprocessorsLab.debug.map`)
-  - `myTable`: Program memory `0x1FFCA` (or `0x1FED7` depending on build)
+  - `counter`: RAM `0x005`
+  - `myArray`: RAM `0x400`–`0x47F` (confirmed from `_build/Simple1/Debug/output.map`)
+  - `myTable`: Program memory `0x1FED8`
   - At breakpoints, inspect `TABLAT`, `FSR0`, and pointer registers instead.
+
+The Watch expression `*(unsigned char *)0x005` returns `E_FAILED`, and entering `0x005` produces no value. This confirms that the current debug adapter does not support C-style memory dereferences or direct PIC18 data-memory inspection in VS Code.
 
 ### Disassembly View
 
@@ -116,8 +158,8 @@ After rebuild, attempt to add these to the Watch panel.
 4. **Connect** PICkit 4 to the ICSP pins and USB.
 5. **Power** the target board externally.
 6. **Start Debugging** from the MPLAB sidebar.
-7. **Inspect** registers and memory at breakpoints using the Variables/Watch panel.
-8. **Continue** or **Step Over** to progress through the code.
+7. **Inspect** exposed registers at breakpoints using the Variables/Watch panel; use `TABLAT` and `FSR0` for the table-copy loop.
+8. **Continue** to progress through setup and subroutine calls. Use **Step Over** cautiously around consecutive calls.
 9. **Stop** debugging when complete.
 
 ---
@@ -140,7 +182,7 @@ After rebuild, attempt to add these to the Watch panel.
 - [config.s](config.s) — Configuration bits for PIC18F87K22.
 - [.vscode/settings.json](.vscode/settings.json) — VS Code workspace settings.
 - [.vscode/Simple1.mplab.json](.vscode/Simple1.mplab.json) — MPLAB project metadata.
-- [dist/default/debug/MicroprocessorsLab.debug.map](dist/default/debug/MicroprocessorsLab.debug.map) — Linker map with symbol addresses.
+- [_build/Simple1/Debug/output.map](_build/Simple1/Debug/output.map) — Linker map with symbol addresses.
 
 ---
 
