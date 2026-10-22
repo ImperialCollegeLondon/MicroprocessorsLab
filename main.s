@@ -1,13 +1,14 @@
 #include <xc.inc>
 
 extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
-extrn	LCD_Setup, LCD_Write_Message
+extrn	LCD_Setup, LCD_Write_Message, LCD_Line_2
 extrn	RTCC_Setup, RTCC_Get_Seconds, RTCC_seconds
 
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
 delay_count:ds 1    ; reserve one byte for counter in the delay routine
+seconds:    ds 2    ; reserve space for seconds otput in ascii
     
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
 myArray:    ds 0x80 ; reserve 128 bytes for message data
@@ -58,8 +59,21 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	call	LCD_Write_Message
 
 loop_clock_read:
-	call	RTCC_Get_Seconds    ; returns seconds value in W
-	movwf	PORTD, A	    ; write value out to PORTD 
+	call	RTCC_Get_Seconds    ; returns seconds value in W in BCD formad
+	movwf	LATD, A	    ; write value out to PORTD 
+	andlw   0xf0	    ; look at upper nibble first for 10s of seconds
+	movwf	seconds, A
+	swapf	seconds, W, A
+	addlw	0x30	    ; convert decimal digit to ascii
+	movwf	seconds, A
+	movf	LATD, W, A
+	andlw	0x0f	    ; look at lower nibble for units in seconds
+	addlw	0x30	    ; convert decimal digit to ascii
+	movwf	seconds+1, A
+	call	LCD_Line_2
+	movlw	2
+	lfsr	2, seconds
+	call	LCD_Write_Message
 	goto	loop_clock_read	    ; goto loop_clock_read
 
 	; a delay subroutine if you need one, times around loop in delay_count

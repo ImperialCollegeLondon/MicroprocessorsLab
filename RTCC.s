@@ -8,10 +8,15 @@ RTCC_seconds: ds    1	    ; reserve 1 byte for variable UART_counter
 psect	rtcc_code,class=CODE
 RTCC_Setup:
     banksel RTCCFG	; RTCC SFRs are not in access ram
-    bsf	    RTSECSEL1	; RTSECSELx bits determine output on RTCC pin
-    bcf	    RTSECSEL0	; 10 outputs the source clock, 01 outputs second count
+    bcf	    RTSECSEL1	; RTSECSELx bits determine output on RTCC pin
+    bsf	    RTSECSEL0	; 10 outputs the source clock, 01 outputs second count
+    movlw   0x55	; use unlock sequence to enable write to RTCWREN
+    movwf   EECON2, A
+    movlw   0xAA
+    movwf   EECON2, A
+    bsf	    RTCWREN
     movlw   0x84	; Enable RTCC, turn on RTCC output pin      
-    movwf   RTCCFG, B
+    movwf   RTCCFG, B    
     movlb   0		; reset BSR to 0
     return
 
